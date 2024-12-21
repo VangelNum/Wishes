@@ -8,6 +8,7 @@ RUN ./gradlew bootJar --no-daemon
 
 FROM openjdk:17-jdk-slim
 
+
 COPY --from=build /build/libs/wisher-1.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
