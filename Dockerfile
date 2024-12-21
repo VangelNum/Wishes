@@ -1,10 +1,11 @@
-FROM openjdk:17-jdk-slim AS builder
-WORKDIR /app
+FROM ubuntu:latest AS build
+RUN apt-get update
+RUN apt-get install openjdk-17-jdk -y
 COPY . .
-RUN ./gradlew build
+RUN ./gradlew bootJar --no-daemon
 
-# Этап запуска
 FROM openjdk:17-jdk-slim
 EXPOSE 8080
-COPY --from=builder /app/build/libs/*.jar wisher-1.jar
-ENTRYPOINT ["java", "-jar", "wisher-1.jar"]
+COPY --from=build /build/libs/wisher-1.jar app.jar
+
+ENTRYPOINT ["java","-jar","app.jar"]
