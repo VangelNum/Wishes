@@ -37,7 +37,8 @@ class DemoController(private val greetingRepository: GreetingRepository) {
 	}
 
 	@PostMapping("/greetings")
-	fun createGreeting(@RequestBody greeting: Greeting): ResponseEntity<Greeting> {
+	fun createGreeting(@RequestBody request: GreetingRequest): ResponseEntity<Greeting> {
+		val greeting = Greeting(message = request.message)
 		val createdGreeting = greetingRepository.save(greeting)
 		return ResponseEntity(createdGreeting, HttpStatus.CREATED)
 	}
@@ -52,5 +53,9 @@ data class Greeting (
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	val id: Long? = null,
+	val message: String
+)
+
+data class GreetingRequest (
 	val message: String
 )

@@ -1,0 +1,12 @@
+name: wisher-local
+
+services:
+  db:
+    image: postgres:16
+    container_name: wisher_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=wisher
+      - POSTGRES_PASSWORD=wisher
+    ports:
+      - "5432:5432"
