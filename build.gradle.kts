@@ -33,7 +33,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
-//	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
