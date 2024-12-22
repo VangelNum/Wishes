@@ -1,0 +1,59 @@
+package com.vangelnum.app.wisher.config
+
+import com.vangelnum.app.wisher.repository.UserRepository
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.userdetails.User
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.userdetails.UsernameNotFoundException
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.web.SecurityFilterChain
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+class SecurityConfig(
+    private val userRepository: UserRepository
+) {
+    @Bean
+    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
+
+    @Bean
+    fun userDetailsService(): UserDetailsService {
+        return UserDetailsService { username ->
+            val user = userRepository.findByEmail(username).orElse(null)
+            ?: throw UsernameNotFoundException("User not found with username or email: $username")
+            user.let {
+                User(
+                    it.email,
+                    it.password,
+                    listOf(GrantedAuthority { "ROLE_${it.role}" })
+                )
+            }
+        }
+    }
+
+    @Bean
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .csrf { it.disable() }
+            .authorizeHttpRequests { auth ->
+                auth
+                    .requestMatchers("/api/v1/user/register").permitAll()
+                    .requestMatchers("/swagger-ui/**").permitAll()
+                    .requestMatchers("/v3/api-docs/**").permitAll()
+                    .requestMatchers("/swagger-resources/**").permitAll()
+                    .requestMatchers(HttpMethod.POST,"/api/v1/wish").authenticated()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/wish-key").authenticated()
+                    .anyRequest().authenticated()
+            }
+            .httpBasic {}
+        return http.build()
+    }
+}
