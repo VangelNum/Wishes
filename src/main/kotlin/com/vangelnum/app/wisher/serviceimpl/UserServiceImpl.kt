@@ -27,7 +27,8 @@ class UserServiceImpl(
             password = passwordEncoder.encode(registrationRequest.password),
             email = registrationRequest.email,
             role = Role.USER,
-            avatarUrl = registrationRequest.avatarUrl
+            avatarUrl = registrationRequest.avatarUrl,
+            coins = 200
         )
         return userRepository.save(newUser)
     }

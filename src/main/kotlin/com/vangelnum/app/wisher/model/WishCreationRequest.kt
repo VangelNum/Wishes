@@ -6,5 +6,6 @@ data class WishCreationRequest(
     val openDate: String,
     val image: String? = null,
     val maxViewers: Int? = null,
-    val isBlurred: Boolean? = null
+    val isBlurred: Boolean? = null,
+    val cost: Int
 )

@@ -34,5 +34,5 @@ data class User(
     val role: Role = Role.USER,
 
     @Column
-    val maxWishes: Int = 5
+    var coins: Int
 )

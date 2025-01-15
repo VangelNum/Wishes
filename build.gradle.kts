@@ -4,6 +4,7 @@ plugins {
 	id("org.springframework.boot") version "3.3.2"
 	id("io.spring.dependency-management") version "1.1.4"
 	kotlin("plugin.jpa") version "1.9.22"
+	kotlin("plugin.serialization") version "1.9.22"
 }
 
 group = "com.vangelnum.app"
@@ -41,6 +42,16 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	implementation("io.github.cdimascio:dotenv-java:2.3.0")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
+	implementation("com.squareup.okhttp3:okhttp:4.9.0")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.3")
+	implementation ("org.json:json:20210307")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+	implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
 }
 
 kotlin {

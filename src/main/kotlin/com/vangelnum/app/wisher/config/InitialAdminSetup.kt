@@ -23,7 +23,8 @@ class InitialAdminSetup(
                 name = adminUsername,
                 password = passwordEncoder.encode(adminPassword),
                 email = adminEmail,
-                role = Role.ADMIN
+                role = Role.ADMIN,
+                coins = 1000
             )
             userRepository.save(adminUser)
         }

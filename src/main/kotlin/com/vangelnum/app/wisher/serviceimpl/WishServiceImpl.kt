@@ -14,7 +14,6 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 
-
 @Service
 class WishServiceImpl(
     private val wishRepository: WishRepository,
@@ -23,13 +22,28 @@ class WishServiceImpl(
     private val viewLogService: ViewLogService,
     private val viewLogRepository: ViewLogRepository
 ) : WishService {
+
+    private fun getUserByEmail(email: String) =
+        userRepository.findByEmail(email).orElseThrow { Exception("User not found") }
+
+    private fun getWishById(id: Long) =
+        wishRepository.findById(id).orElseThrow { Exception("Wish not found") }
+
+    private fun checkWishOwnership(wish: Wish, userEmail: String) {
+        val user = getUserByEmail(userEmail)
+        if (wish.user.id != user.id) {
+            throw AccessDeniedException("You are not the owner of this wish.")
+        }
+    }
+
     @Transactional
     override fun createWish(wishCreationRequest: WishCreationRequest, email: String): Wish {
-        val user = userRepository.findByEmail(email).orElseThrow { Exception("User not found") }
-        val userWishes = wishRepository.findAll().filter { it.user.id == user.id }
-        if (userWishes.size >= user.maxWishes) {
-            throw Exception("User has reached maximum number of wishes")
+        val user = getUserByEmail(email)
+        if (user.coins < wishCreationRequest.cost) {
+            throw Exception("Not enough coins to create this wish.")
         }
+        user.coins -= wishCreationRequest.cost
+        userRepository.save(user)
         val wish = Wish(
             text = wishCreationRequest.text,
             user = user,
@@ -37,7 +51,8 @@ class WishServiceImpl(
             image = wishCreationRequest.image,
             openDate = LocalDate.parse(wishCreationRequest.openDate),
             maxViewers = wishCreationRequest.maxViewers,
-            isBlurred = wishCreationRequest.isBlurred ?: false
+            isBlurred = wishCreationRequest.isBlurred ?: false,
+            cost = wishCreationRequest.cost
         )
         return wishRepository.save(wish)
     }
@@ -46,7 +61,7 @@ class WishServiceImpl(
     override fun getWishesByKey(key: String, viewerEmail: String): List<Wish> {
         val wishKey = wishKeyRepository.findByKey(key).orElseThrow { Exception("Key not found") }
         val owner = wishKey.user
-        val viewer = userRepository.findByEmail(viewerEmail).orElseThrow { Exception("User not found") }
+        val viewer = getUserByEmail(viewerEmail)
         val wishes = wishRepository.findAll().filter { it.user.id == owner.id && it.openDate <= LocalDate.now() }
 
         wishes.forEach { wish ->
@@ -75,25 +90,19 @@ class WishServiceImpl(
     }
 
     override fun getViewLogsForWish(wishId: Long, userEmail: String): List<ViewLog> {
-        val user = userRepository.findByEmail(userEmail).orElseThrow { Exception("User not found") }
-        val wish = wishRepository.findById(wishId).orElseThrow { Exception("Wish not found") }
-        if (wish.user.id != user.id) {
-            throw AccessDeniedException("You are not the owner of this wish.")
-        }
+        val wish = getWishById(wishId)
+        checkWishOwnership(wish, userEmail)
         return viewLogRepository.findByWishId(wishId)
     }
 
     override fun deleteWish(id: Long, userEmail: String) {
-        val user = userRepository.findByEmail(userEmail).orElseThrow { Exception("User not found") }
-        val wish = wishRepository.findById(id).orElseThrow { Exception("Wish not found") }
-        if (wish.user.id != user.id) {
-            throw AccessDeniedException("You are not the owner of this wish.")
-        }
+        val wish = getWishById(id)
+        checkWishOwnership(wish, userEmail)
         wishRepository.delete(wish)
     }
 
     override fun getUserWishes(email: String): List<Wish> {
-        val user = userRepository.findByEmail(email).orElseThrow { Exception("User not found") }
+        val user = getUserByEmail(email)
         return wishRepository.findByUser(user)
     }
 }
