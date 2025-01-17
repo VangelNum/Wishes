@@ -9,6 +9,6 @@ interface UserService {
     fun getUserByEmail(email: String): User?
     fun getAllUsers(): List<User>
     fun getUserById(id: Long): User?
-    fun updateUser(id: Long, updateProfileRequest: UpdateProfileRequest): User?
+    fun updateUser(updateProfileRequest: UpdateProfileRequest): User?
     fun deleteUser(id: Long)
 }

@@ -7,6 +7,7 @@ import com.vangelnum.app.wisher.model.RegistrationRequest
 import com.vangelnum.app.wisher.model.UpdateProfileRequest
 import com.vangelnum.app.wisher.repository.UserRepository
 import com.vangelnum.app.wisher.service.UserService
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -45,16 +46,24 @@ class UserServiceImpl(
         return userRepository.findById(id).orElse(null)
     }
 
-    override fun updateUser(id: Long, updateProfileRequest: UpdateProfileRequest): User? {
-        val checkStatus = userValidator.checkUser(updateProfileRequest, id)
+    override fun updateUser(updateProfileRequest: UpdateProfileRequest): User? {
+        val authentication = SecurityContextHolder.getContext().authentication
+        val email = authentication.name
+        val checkStatus = userValidator.checkUser(
+            RegistrationRequest(
+                updateProfileRequest.name,
+                updateProfileRequest.password,
+                updateProfileRequest.email,
+                updateProfileRequest.avatarUrl
+        ))
         if (!checkStatus.isSuccess) {
             throw IllegalArgumentException(checkStatus.message)
         }
-        return userRepository.findById(id).map { existingUser ->
+        return userRepository.findByEmail(email).map { existingUser ->
             val updatedUser = existingUser.copy(
-                name = updateProfileRequest.name ?: existingUser.name,
+                name = updateProfileRequest.name,
                 avatarUrl = updateProfileRequest.avatarUrl ?: existingUser.avatarUrl,
-                email = updateProfileRequest.email ?: existingUser.email
+                email = updateProfileRequest.email
             )
             userRepository.save(updatedUser)
         }.orElse(null)

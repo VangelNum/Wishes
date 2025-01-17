@@ -1,7 +1,6 @@
 package com.vangelnum.app.wisher.core.validator
 
 import com.vangelnum.app.wisher.model.RegistrationRequest
-import com.vangelnum.app.wisher.model.UpdateProfileRequest
 import com.vangelnum.app.wisher.repository.UserRepository
 import org.springframework.stereotype.Component
 import org.springframework.util.StringUtils
@@ -29,17 +28,6 @@ class UserValidator(
             .orElse(Status(true, "Данные валидны"))
     }
 
-    fun checkUser(updateProfileRequest: UpdateProfileRequest, id: Long): Status {
-        return Stream.of(
-            updateProfileRequest.name?.let { checkName(it) } ?: Status(true),
-            updateProfileRequest.email?.let { checkEmail(it, id) } ?: Status(true),
-            updateProfileRequest.avatarUrl?.let { checkAvatarUrl(it) } ?: Status(true)
-        )
-            .filter { !it.isSuccess }
-            .findFirst()
-            .orElse(Status(true, "Данные валидны"))
-    }
-
     private fun checkName(name: String): Status {
         if (!StringUtils.hasText(name)) {
             return Status(false, "Имя не может быть пустым")
@@ -56,19 +44,6 @@ class UserValidator(
         }
         if (password.length < 8 || password.length > 30) {
             return Status(false, "Пароль должен содержать не менее 8 и не более 30 символов")
-        }
-        return Status(true)
-    }
-
-    private fun checkEmail(email: String, id: Long): Status {
-        if (!StringUtils.hasText(email)) {
-            return Status(false, "Почта не может быть пустой")
-        }
-        if (!EMAIL_VALIDATION_REGEX.matches(email)) {
-            return Status(false, "Почта имеет неверный формат")
-        }
-        if (userRepository.findByEmail(email).isPresent && userRepository.findByEmail(email).get().id != id) {
-            return Status(false, "Пользователь с таким e-mail уже существует")
         }
         return Status(true)
     }

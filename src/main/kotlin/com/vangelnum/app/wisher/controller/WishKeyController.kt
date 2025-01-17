@@ -1,7 +1,7 @@
 package com.vangelnum.app.wisher.controller
 
+import com.vangelnum.app.wisher.controller.dto.WishKeyDto
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
-import com.vangelnum.app.wisher.entity.WishKey
 import com.vangelnum.app.wisher.service.WishKeyService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -20,25 +20,31 @@ class WishKeyController(
 ) {
     @Operation(summary = "Генерация ключа")
     @PostMapping("/generate")
-    fun generateWishKey(): ResponseEntity<WishKey> {
+    fun generateWishKey(): ResponseEntity<WishKeyDto> {
         val email = getCurrentUserEmail()
-        val wishKey = wishKeyService.generateWishKey(email)
-        return ResponseEntity(wishKey, HttpStatus.OK)
+        val existingWishKey = wishKeyService.getWishKeyForCurrentUser(email)
+        return if (existingWishKey != null) {
+            ResponseEntity.ok(WishKeyDto(existingWishKey.key))
+        } else {
+            val wishKey = wishKeyService.generateWishKey(email)
+            ResponseEntity(WishKeyDto(wishKey.key), HttpStatus.CREATED)
+        }
     }
 
     @Operation(summary = "Получение ключа текущего пользователя")
     @GetMapping("/my")
-    fun getCurrentUserWishKey(): ResponseEntity<WishKey> {
+    fun getCurrentUserWishKey(): ResponseEntity<WishKeyDto> {
         val email = getCurrentUserEmail()
         val wishKey = wishKeyService.getWishKeyForCurrentUser(email)
-        return ResponseEntity.ok(wishKey)
+        return wishKey?.let { ResponseEntity.ok(WishKeyDto(it.key)) }
+            ?: ResponseEntity.notFound().build()
     }
 
     @Operation(summary = "Перегенерировать ключ")
     @PostMapping("/regenerate")
-    fun regenerateWishKey(): ResponseEntity<WishKey> {
+    fun regenerateWishKey(): ResponseEntity<WishKeyDto> {
         val email = getCurrentUserEmail()
         val newWishKey = wishKeyService.regenerateWishKey(email)
-        return ResponseEntity.ok(newWishKey)
+        return ResponseEntity.ok(WishKeyDto(newWishKey.key))
     }
 }

@@ -53,12 +53,11 @@ class UserController(
     }
 
     @Operation(summary = "Обновление данных пользователя")
-    @PutMapping("/{id}")
+    @PostMapping
     fun updateUser(
-        @PathVariable id: Long,
         @RequestBody updateProfileRequest: UpdateProfileRequest
     ): ResponseEntity<User?> {
-        val updatedUser = userService.updateUser(id, updateProfileRequest)
+        val updatedUser = userService.updateUser(updateProfileRequest)
         return if (updatedUser != null) ResponseEntity(
             updatedUser,
             HttpStatus.OK

@@ -14,10 +14,13 @@ class WishKeyServiceImpl(
 ) : WishKeyService {
 
     private fun getUserByEmail(email: String) =
-        userRepository.findByEmail(email).orElseThrow { Exception("User not found") }
+        userRepository.findByEmail(email).orElseThrow { NoSuchElementException("User not found") }
 
     override fun generateWishKey(email: String): WishKey {
         val user = getUserByEmail(email)
+        wishKeyRepository.findByUser(user).ifPresent {
+            throw Error("Wish key already exists for user: $email")
+        }
         val key = UUID.randomUUID().toString().take(15)
         val wishKey = WishKey(
             key = key,
@@ -34,9 +37,9 @@ class WishKeyServiceImpl(
     override fun regenerateWishKey(email: String): WishKey {
         val user = getUserByEmail(email)
         val existingWishKey = wishKeyRepository.findByUser(user)
-            .orElseThrow { Exception("Wish key not found for the current user") } // Or handle this case differently, e.g., generate a new one if it doesn't exist
+            .orElseThrow { NoSuchElementException("Wish key not found for the current user") }
 
-        val newKey = UUID.randomUUID().toString()
+        val newKey = UUID.randomUUID().toString().take(15)
         val updatedWishKey = existingWishKey.copy(key = newKey)
         return wishKeyRepository.save(updatedWishKey)
     }

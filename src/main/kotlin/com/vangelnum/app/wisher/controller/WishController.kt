@@ -4,6 +4,7 @@ import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
 import com.vangelnum.app.wisher.entity.ViewLog
 import com.vangelnum.app.wisher.entity.Wish
 import com.vangelnum.app.wisher.model.WishCreationRequest
+import com.vangelnum.app.wisher.model.WishDateResponse
 import com.vangelnum.app.wisher.service.WishService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -25,12 +26,27 @@ class WishController(
         return ResponseEntity(createdWish, HttpStatus.CREATED)
     }
 
-    @Operation(summary = "Получение пожеланий пользователя по ключу")
+    @Operation(summary = "Получение дат поздравлений пользователя по ключу")
     @GetMapping("/{key}")
-    fun getWishesByKey(@PathVariable key: String): ResponseEntity<List<Wish>> {
+    fun getWishDatesByKey(@PathVariable key: String): ResponseEntity<List<WishDateResponse>> {
         val email = getCurrentUserEmail()
-        val wishes = wishService.getWishesByKey(key, email)
-        return ResponseEntity(wishes, HttpStatus.OK)
+        val wishDates = wishService.getWishDatesByKey(key, email)
+        return ResponseEntity(wishDates, HttpStatus.OK)
+    }
+
+    @Operation(summary = "Получение пожелания по ключу и id")
+    @GetMapping("/{key}/{wishId}")
+    fun getWishByKeyAndId(
+        @PathVariable key: String,
+        @PathVariable wishId: Int
+    ): ResponseEntity<*> {
+        val email = getCurrentUserEmail()
+        return try {
+            val wish = wishService.getWishByKeyAndId(key, wishId, email)
+            ResponseEntity.ok(wish)
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.message)
+        }
     }
 
     @Operation(summary = "Получение истории просмотров для пожелания")

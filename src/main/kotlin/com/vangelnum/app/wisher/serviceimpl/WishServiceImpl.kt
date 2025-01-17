@@ -3,6 +3,7 @@ package com.vangelnum.app.wisher.serviceimpl
 import com.vangelnum.app.wisher.entity.ViewLog
 import com.vangelnum.app.wisher.entity.Wish
 import com.vangelnum.app.wisher.model.WishCreationRequest
+import com.vangelnum.app.wisher.model.WishDateResponse
 import com.vangelnum.app.wisher.repository.UserRepository
 import com.vangelnum.app.wisher.repository.ViewLogRepository
 import com.vangelnum.app.wisher.repository.WishKeyRepository
@@ -24,15 +25,15 @@ class WishServiceImpl(
 ) : WishService {
 
     private fun getUserByEmail(email: String) =
-        userRepository.findByEmail(email).orElseThrow { Exception("User not found") }
+        userRepository.findByEmail(email).orElseThrow { Exception("Пользователь не найден") }
 
     private fun getWishById(id: Long) =
-        wishRepository.findById(id).orElseThrow { Exception("Wish not found") }
+        wishRepository.findById(id).orElseThrow { Exception("Поздравление не найдено") }
 
     private fun checkWishOwnership(wish: Wish, userEmail: String) {
         val user = getUserByEmail(userEmail)
         if (wish.user.id != user.id) {
-            throw AccessDeniedException("You are not the owner of this wish.")
+            throw AccessDeniedException("Вы не являетесь создателем пожелания")
         }
     }
 
@@ -40,7 +41,7 @@ class WishServiceImpl(
     override fun createWish(wishCreationRequest: WishCreationRequest, email: String): Wish {
         val user = getUserByEmail(email)
         if (user.coins < wishCreationRequest.cost) {
-            throw Exception("Not enough coins to create this wish.")
+            throw Exception("Не хватает монет для создания пожелания")
         }
         user.coins -= wishCreationRequest.cost
         userRepository.save(user)
@@ -51,42 +52,51 @@ class WishServiceImpl(
             image = wishCreationRequest.image,
             openDate = LocalDate.parse(wishCreationRequest.openDate),
             maxViewers = wishCreationRequest.maxViewers,
-            isBlurred = wishCreationRequest.isBlurred ?: false,
+            isBlurred = wishCreationRequest.isBlurred,
             cost = wishCreationRequest.cost
         )
         return wishRepository.save(wish)
     }
 
-    @Transactional
-    override fun getWishesByKey(key: String, viewerEmail: String): List<Wish> {
-        val wishKey = wishKeyRepository.findByKey(key).orElseThrow { Exception("Key not found") }
+    override fun getWishDatesByKey(key: String, viewerEmail: String): List<WishDateResponse> {
+        val wishKey = wishKeyRepository.findByKey(key).orElseThrow { Exception("Ключ не найден") }
+        val owner = wishKey.user
+        return wishRepository.findAll().filter { it.user.id == owner.id }
+            .map { WishDateResponse(it.wishDate.toString(), it.openDate.toString()) }
+    }
+
+    override fun getWishByKeyAndId(key: String, wishId: Int, viewerEmail: String): Wish {
+        val wishKey = wishKeyRepository.findByKey(key).orElseThrow { Exception("Ключ не найден") }
         val owner = wishKey.user
         val viewer = getUserByEmail(viewerEmail)
-        val wishes = wishRepository.findAll().filter { it.user.id == owner.id && it.openDate <= LocalDate.now() }
 
-        wishes.forEach { wish ->
-            wish.maxViewers?.let { max ->
-                if (max > 0) {
-                    val currentViews = viewLogRepository.countByWishId(wish.id!!)
-                    if (currentViews >= max && owner.id != viewer.id) {
-                        throw AccessDeniedException("The wish has reached the maximum number of views.")
-                    }
-                    if (owner.id != viewer.id) {
-                        viewLogService.createViewLog(viewer, owner, wish)
-                    }
-                } else {
-                    if (owner.id != viewer.id) {
-                        viewLogService.createViewLog(viewer, owner, wish)
-                    }
+        val wish = wishRepository.findByUserAndId(owner, wishId.toLong())
+            .orElseThrow { Exception("Поздравление не найдено") }
+
+        if (wish.openDate > LocalDate.now()) {
+            throw IllegalStateException("Вы сможете посмотреть поздравление начиная с ${wish.openDate}")
+        }
+
+        wish.maxViewers?.let { max ->
+            if (max > 0) {
+                val currentViews = viewLogRepository.countByWishId(wish.id!!)
+                if (currentViews >= max && owner.id != viewer.id) {
+                    throw AccessDeniedException("Достигнуто ограничение на просмотры")
                 }
-            } ?: run {
+                if (owner.id != viewer.id) {
+                    viewLogService.createViewLog(viewer, owner, wish)
+                }
+            } else {
                 if (owner.id != viewer.id) {
                     viewLogService.createViewLog(viewer, owner, wish)
                 }
             }
+        } ?: run {
+            if (owner.id != viewer.id) {
+                viewLogService.createViewLog(viewer, owner, wish)
+            }
         }
-
-        return wishes
+        return wish
     }
 
     override fun getViewLogsForWish(wishId: Long, userEmail: String): List<ViewLog> {
