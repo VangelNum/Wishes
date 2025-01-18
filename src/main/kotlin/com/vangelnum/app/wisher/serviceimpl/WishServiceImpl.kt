@@ -62,7 +62,7 @@ class WishServiceImpl(
         val wishKey = wishKeyRepository.findByKey(key).orElseThrow { Exception("Ключ не найден") }
         val owner = wishKey.user
         return wishRepository.findAll().filter { it.user.id == owner.id }
-            .map { WishDateResponse(it.wishDate.toString(), it.openDate.toString()) }
+            .map { WishDateResponse(it.id!!, it.wishDate.toString(), it.openDate.toString()) }
     }
 
     override fun getWishByKeyAndId(key: String, wishId: Int, viewerEmail: String): Wish {
