@@ -4,6 +4,6 @@ meta:
     name: gradle
     version: 17
 build:
-  args: "--no-daemon -Dspring.profiles.active=prod --info"
+  args: "--no-daemon -Dspring.profiles.active=prod --info --build-cache"
 run:
   jarName: build/libs/wisher-1.jar
