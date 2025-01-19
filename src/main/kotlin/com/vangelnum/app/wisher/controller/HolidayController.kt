@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/holidays")
 class HolidayController(private val holidayService: HolidayService) {
 
-    @GetMapping("/")
+    @GetMapping
     @Operation(summary = "Получение списка праздников на дату в формате 2025-01-30")
     suspend fun getHolidays(@RequestParam("date") date: String): ResponseEntity<List<Holiday>> {
         return try {

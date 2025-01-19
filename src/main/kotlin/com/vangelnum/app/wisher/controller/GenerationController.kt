@@ -1,6 +1,7 @@
 package com.vangelnum.app.wisher.controller
 
 import com.vangelnum.app.wisher.service.GenerationService
+import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.MediaType
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*
 class ImageGenerationController(private val generationService: GenerationService) {
 
     @GetMapping("/image/{prompt}")
+    @Operation(summary = "Сгенерировать изображение на основе запроса")
     suspend fun generateImage(
         @PathVariable prompt: String,
         @RequestParam(required = false) model: String?,
@@ -32,8 +34,29 @@ class ImageGenerationController(private val generationService: GenerationService
     }
 
     @GetMapping("/image/models")
+    @Operation(summary = "Получить список доступных моделей для генерации изображений")
     suspend fun getListOfModels(): ResponseEntity<List<String>> {
-        val models = generationService.getListOfModels()
+        val models = generationService.getImageModels()
+        return ResponseEntity.ok(models)
+    }
+
+    @GetMapping("/text/{prompt}")
+    @Operation(summary = "Сгенерировать текст на основе запроса")
+    suspend fun generateText(
+        @PathVariable prompt: String,
+        @RequestParam(required = false) model: String?,
+        @RequestParam(required = false) seed: Int?,
+        @RequestParam(required = false) json: Boolean?,
+        @RequestParam(required = false) system: String?
+    ): ResponseEntity<String> {
+        val generatedText = generationService.generateText(prompt, model, seed, json, system)
+        return ResponseEntity.ok(generatedText)
+    }
+
+    @GetMapping("/text/models")
+    @Operation(summary = "Получить список доступных моделей для генерации текста")
+    suspend fun getListOfTextModels(): ResponseEntity<List<String>> {
+        val models = generationService.getTextModels()
         return ResponseEntity.ok(models)
     }
 }

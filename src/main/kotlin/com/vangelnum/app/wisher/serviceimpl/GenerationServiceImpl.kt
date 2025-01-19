@@ -1,8 +1,11 @@
 package com.vangelnum.app.wisher.serviceimpl
 
+import com.vangelnum.app.wisher.model.TextModel
 import com.vangelnum.app.wisher.service.GenerationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -11,7 +14,8 @@ import org.springframework.web.util.UriComponentsBuilder
 @Service
 class GenerationServiceImpl(private val restTemplate: RestTemplate) : GenerationService {
 
-    private val baseUrl = "https://image.pollinations.ai"
+    private val imageBaseUrl = "https://image.pollinations.ai"
+    private val textBaseUrl = "https://text.pollinations.ai"
 
     override suspend fun generateImage(
         prompt: String,
@@ -24,7 +28,7 @@ class GenerationServiceImpl(private val restTemplate: RestTemplate) : Generation
         enhance: Boolean?,
         safe: Boolean?
     ): ByteArray {
-        val uri = UriComponentsBuilder.fromHttpUrl(baseUrl)
+        val uri = UriComponentsBuilder.fromHttpUrl(imageBaseUrl)
             .pathSegment("prompt", prompt)
             .apply {
                 model?.let { queryParam("model", it) }
@@ -50,9 +54,53 @@ class GenerationServiceImpl(private val restTemplate: RestTemplate) : Generation
         }
     }
 
-    override suspend fun getListOfModels(): List<String> {
+    override suspend fun getImageModels(): List<String> {
         return withContext(Dispatchers.IO) {
-            restTemplate.getForObject("$baseUrl/models", Array<String>::class.java)
+            restTemplate.getForObject("$imageBaseUrl/models", Array<String>::class.java)
         }?.toList() ?: emptyList()
+    }
+
+    override suspend fun generateText(
+        prompt: String,
+        model: String?,
+        seed: Int?,
+        json: Boolean?,
+        system: String?
+    ): String {
+        val uri = UriComponentsBuilder.fromHttpUrl(textBaseUrl)
+            .pathSegment(prompt)
+            .apply {
+                model?.let { queryParam("model", it) }
+                seed?.let { queryParam("seed", it) }
+                json?.let { queryParam("json", it) }
+                system?.let { queryParam("system", it) }
+            }
+            .build()
+            .toUri()
+
+        val response = withContext(Dispatchers.IO) {
+            restTemplate.getForEntity(uri, String::class.java)
+        }
+
+        if (response.statusCode == HttpStatus.OK && response.body != null) {
+            return response.body!!
+        } else {
+            throw RuntimeException("Failed to fetch text. Status code: ${response.statusCode}")
+        }
+    }
+
+    override suspend fun getTextModels(): List<String> {
+        val uri = UriComponentsBuilder.fromHttpUrl("https://text.pollinations.ai")
+            .pathSegment("models")
+            .build()
+            .toUri()
+
+        val responseType = object : ParameterizedTypeReference<List<TextModel>>() {}
+
+        val responseEntity = withContext(Dispatchers.IO) {
+            restTemplate.exchange(uri, HttpMethod.GET, null, responseType)
+        }
+
+        return responseEntity.body?.map { it.name } ?: emptyList()
     }
 }

@@ -13,5 +13,15 @@ interface GenerationService {
         safe: Boolean?
     ): ByteArray
 
-    suspend fun getListOfModels(): List<String>
+    suspend fun getImageModels(): List<String>
+
+    suspend fun generateText(
+        prompt: String,
+        model: String?,
+        seed: Int?,
+        json: Boolean?,
+        system: String?
+    ): String
+
+    suspend fun getTextModels(): List<String>
 }
