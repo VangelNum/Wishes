@@ -4,6 +4,10 @@ meta:
     name: gradle
     version: 17
 build:
+  artifacts:
+    build/libs/*.jar: /
   args: "--no-daemon -Dspring.profiles.active=prod --info --build-cache"
 run:
   jarName: build/libs/wisher-1.jar
+  persistenceMount: /data
+  containerPort: 80
