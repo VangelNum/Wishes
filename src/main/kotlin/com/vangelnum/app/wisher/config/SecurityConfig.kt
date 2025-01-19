@@ -3,7 +3,6 @@ package com.vangelnum.app.wisher.config
 import com.vangelnum.app.wisher.repository.UserRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -46,12 +45,9 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/api/v1/user/register").permitAll()
-                    .requestMatchers("/api/v1/generate/image").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers("/swagger-resources/**").permitAll()
-                    .requestMatchers(HttpMethod.POST,"/api/v1/wish").authenticated()
-                    .requestMatchers(HttpMethod.POST, "/api/v1/wish-key").authenticated()
                     .anyRequest().authenticated()
             }
             .httpBasic {}

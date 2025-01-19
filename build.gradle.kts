@@ -52,6 +52,8 @@ dependencies {
 	implementation ("org.json:json:20210307")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
 	implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
+
+	implementation("org.jsoup:jsoup:1.15.4")
 }
 
 kotlin {
