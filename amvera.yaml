@@ -1,0 +1,9 @@
+meta:
+  environment: jvm
+  toolchain:
+    name: gradle
+    version: 17
+build:
+  args: "--no-daemon -Dspring.profiles.active=prod"
+run:
+  jarName: build/libs/wisher-1.jar
