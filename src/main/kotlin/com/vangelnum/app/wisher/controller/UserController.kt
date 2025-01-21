@@ -3,6 +3,7 @@ package com.vangelnum.app.wisher.controller
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
 import com.vangelnum.app.wisher.entity.User
 import com.vangelnum.app.wisher.model.RegistrationRequest
+import com.vangelnum.app.wisher.model.UpdateAvatarRequest
 import com.vangelnum.app.wisher.model.UpdateProfileRequest
 import com.vangelnum.app.wisher.service.UserService
 import io.swagger.v3.oas.annotations.Operation
@@ -22,50 +23,51 @@ class UserController(
     @PostMapping("/register")
     fun registerUser(@RequestBody registrationRequest: RegistrationRequest): ResponseEntity<User> {
         val createdUser = userService.registerUser(registrationRequest)
-        return ResponseEntity(createdUser, HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser)
     }
 
     @Operation(summary = "Информация о текущем пользователе")
     @GetMapping("/me")
     fun getCurrentUserInfo(): ResponseEntity<User> {
         val email = getCurrentUserEmail()
-        val user = userService.getUserByEmail(email)
-        return if (user != null) {
-            ResponseEntity(user, HttpStatus.OK)
-        } else {
-            ResponseEntity(HttpStatus.NOT_FOUND)
-        }
+        return userService.getUserByEmail(email).let { ResponseEntity.ok(it) }
     }
 
     @Operation(summary = "Получение списка пользователей")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     fun getAllUsers(): ResponseEntity<List<User>> {
-        return ResponseEntity(userService.getAllUsers(), HttpStatus.OK)
+        return ResponseEntity.ok(userService.getAllUsers())
     }
 
     @Operation(summary = "Получение пользователя по ID")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    fun getUserById(@PathVariable id: Long): ResponseEntity<User?> {
-        val user = userService.getUserById(id)
-        return if (user != null) ResponseEntity(user, HttpStatus.OK) else ResponseEntity(HttpStatus.NOT_FOUND)
+    fun getUserById(@PathVariable id: Long): ResponseEntity<User> {
+        return userService.getUserById(id).let { ResponseEntity.ok(it) }
     }
 
     @Operation(summary = "Обновление данных пользователя")
-    @PostMapping
+    @PutMapping
     fun updateUser(
         @RequestBody updateProfileRequest: UpdateProfileRequest
-    ): ResponseEntity<User?> {
+    ): ResponseEntity<User> {
         val updatedUser = userService.updateUser(updateProfileRequest)
-        return if (updatedUser != null) ResponseEntity(
-            updatedUser,
-            HttpStatus.OK
-        ) else ResponseEntity(HttpStatus.NOT_FOUND)
+        return ResponseEntity.ok(updatedUser)
+    }
+
+    @Operation(summary = "Обновление аватара пользователя")
+    @PutMapping("/avatar")
+    fun updateAvatar(@RequestBody updateAvatarRequest: UpdateAvatarRequest): ResponseEntity<User> {
+        val updatedUser = userService.updateUserAvatar(updateAvatarRequest.avatarUrl)
+        return ResponseEntity.ok(updatedUser)
     }
 
     @Operation(summary = "Удаление пользователя по ID")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    fun deleteUser(@PathVariable id: Long) = userService.deleteUser(id)
+    fun deleteUser(@PathVariable id: Long): ResponseEntity<Void> {
+        userService.deleteUser(id)
+        return ResponseEntity.noContent().build()
+    }
 }

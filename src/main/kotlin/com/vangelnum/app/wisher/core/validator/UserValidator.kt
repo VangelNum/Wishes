@@ -21,14 +21,20 @@ class UserValidator(
             checkName(registrationRequest.name),
             checkPassword(registrationRequest.password),
             checkEmail(registrationRequest.email),
-            registrationRequest.avatarUrl?.let { checkAvatarUrl(it) } ?: Status(true)
         )
             .filter { !it.isSuccess }
             .findFirst()
             .orElse(Status(true, "Данные валидны"))
     }
 
-    private fun checkName(name: String): Status {
+    fun checkAvatarUrl(avatarUrl: String): Status {
+        if (!AVATAR_URL_VALIDATION_REGEX.matches(avatarUrl)) {
+            return Status(false, "Неверный формат ссылки")
+        }
+        return Status(true)
+    }
+
+    fun checkName(name: String): Status {
         if (!StringUtils.hasText(name)) {
             return Status(false, "Имя не может быть пустым")
         }
@@ -38,7 +44,7 @@ class UserValidator(
         return Status(true)
     }
 
-    private fun checkPassword(password: String): Status {
+    fun checkPassword(password: String): Status {
         if (!StringUtils.hasText(password)) {
             return Status(false, "Пароль не может быть пустым")
         }
@@ -48,7 +54,7 @@ class UserValidator(
         return Status(true)
     }
 
-    private fun checkEmail(email: String): Status {
+    fun checkEmail(email: String): Status {
         if (!StringUtils.hasText(email)) {
             return Status(false, "Почта не может быть пустой")
         }
@@ -61,9 +67,15 @@ class UserValidator(
         return Status(true)
     }
 
-    private fun checkAvatarUrl(avatarUrl: String): Status {
-        if (!AVATAR_URL_VALIDATION_REGEX.matches(avatarUrl)) {
-            return Status(false, "Не верный формат ссылки")
+    fun checkEmailForUpdate(email: String, currentEmail: String): Status {
+        if (!StringUtils.hasText(email)) {
+            return Status(false, "Почта не может быть пустой")
+        }
+        if (!EMAIL_VALIDATION_REGEX.matches(email)) {
+            return Status(false, "Почта имеет неверный формат")
+        }
+        if (email != currentEmail && userRepository.findByEmail(email).isPresent) {
+            return Status(false, "Пользователь с таким e-mail уже существует")
         }
         return Status(true)
     }

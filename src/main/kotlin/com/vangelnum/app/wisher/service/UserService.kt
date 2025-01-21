@@ -6,9 +6,10 @@ import com.vangelnum.app.wisher.model.UpdateProfileRequest
 
 interface UserService {
     fun registerUser(registrationRequest: RegistrationRequest): User
-    fun getUserByEmail(email: String): User?
+    fun updateUserAvatar(avatar: String): User
+    fun getUserByEmail(email: String): User
     fun getAllUsers(): List<User>
-    fun getUserById(id: Long): User?
-    fun updateUser(updateProfileRequest: UpdateProfileRequest): User?
+    fun getUserById(id: Long): User
+    fun updateUser(updateProfileRequest: UpdateProfileRequest): User
     fun deleteUser(id: Long)
 }

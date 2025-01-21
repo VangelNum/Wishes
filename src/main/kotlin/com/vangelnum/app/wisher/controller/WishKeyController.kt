@@ -1,6 +1,6 @@
 package com.vangelnum.app.wisher.controller
 
-import com.vangelnum.app.wisher.controller.dto.WishKeyDto
+import com.vangelnum.app.wisher.model.dto.WishKeyDto
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
 import com.vangelnum.app.wisher.service.WishKeyService
 import io.swagger.v3.oas.annotations.Operation

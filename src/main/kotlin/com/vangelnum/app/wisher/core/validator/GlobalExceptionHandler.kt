@@ -6,9 +6,17 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.WebRequest
+import java.util.NoSuchElementException
 
 @ControllerAdvice
 class GlobalExceptionHandler {
+
+    companion object {
+        const val INVALID_REQUEST_MESSAGE = "Некорректный запрос"
+        const val UNKNOWN_ERROR_MESSAGE = "Произошла неизвестная ошибка"
+        const val ACCESS_DENIED_MESSAGE = "Доступ запрещен"
+        const val RESOURCE_NOT_FOUND_MESSAGE = "Запрашиваемый ресурс не найден"
+    }
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgumentException(
@@ -16,10 +24,40 @@ class GlobalExceptionHandler {
         request: WebRequest
     ): ResponseEntity<ErrorResponse> {
         val errorResponse = ErrorResponse(
-            message = ex.message ?: "Некорректный запрос",
+            message = ex.message ?: INVALID_REQUEST_MESSAGE,
             status = HttpStatus.BAD_REQUEST.value()
         )
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+        return ResponseEntity.badRequest().body(errorResponse)
+    }
+
+    @ExceptionHandler(NoSuchElementException::class)
+    fun handleNoSuchElementException(
+        ex: NoSuchElementException,
+        request: WebRequest
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            message = ex.message ?: RESOURCE_NOT_FOUND_MESSAGE,
+            status = HttpStatus.NOT_FOUND.value()
+        )
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
+    }
+
+    @ExceptionHandler(EntityNotFoundException::class)
+    fun handleEntityNotFoundException(ex: EntityNotFoundException, request: WebRequest): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            message = ex.message ?: RESOURCE_NOT_FOUND_MESSAGE,
+            status = HttpStatus.NOT_FOUND.value()
+        )
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
+    }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDeniedException(ex: AccessDeniedException, request: WebRequest): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            message = ACCESS_DENIED_MESSAGE,
+            status = HttpStatus.FORBIDDEN.value()
+        )
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse)
     }
 
     @ExceptionHandler(Exception::class)
@@ -28,28 +66,10 @@ class GlobalExceptionHandler {
         request: WebRequest
     ): ResponseEntity<ErrorResponse> {
         val errorResponse = ErrorResponse(
-            message = ex.message ?: "Произошла неизвестная ошибка",
+            message = UNKNOWN_ERROR_MESSAGE,
             status = HttpStatus.INTERNAL_SERVER_ERROR.value()
         )
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse)
-    }
-
-    @ExceptionHandler(AccessDeniedException::class)
-    fun handleAccessDeniedException(ex: AccessDeniedException, request: WebRequest): ResponseEntity<ErrorResponse> {
-        val errorResponse = ErrorResponse(
-            message = "Доступ запрещен",
-            status = HttpStatus.FORBIDDEN.value()
-        )
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse)
-    }
-
-    @ExceptionHandler(EntityNotFoundException::class)
-    fun handleEntityNotFoundException(ex: EntityNotFoundException, request: WebRequest): ResponseEntity<ErrorResponse> {
-        val errorResponse = ErrorResponse(
-            message = ex.message ?: "Запрашиваемый ресурс не найден",
-            status = HttpStatus.NOT_FOUND.value()
-        )
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse)
+        return ResponseEntity.internalServerError().body(errorResponse)
     }
 }
 
