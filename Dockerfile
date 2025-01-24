@@ -4,5 +4,5 @@ RUN chmod +x gradlew
 RUN ./gradlew bootJar --no-daemon --info
 
 FROM eclipse-temurin:17-jre-alpine
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /build/libs/wisher-1.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
