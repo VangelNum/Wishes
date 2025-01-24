@@ -12,4 +12,6 @@ interface UserService {
     fun getUserById(id: Long): User
     fun updateUser(updateProfileRequest: UpdateProfileRequest): User
     fun deleteUser(id: Long)
+    fun verifyEmail(email: String, verificationCode: String): Boolean
+    fun resendVerificationCode(email: String): Boolean
 }
