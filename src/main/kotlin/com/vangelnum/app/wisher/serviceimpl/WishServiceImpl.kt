@@ -79,7 +79,9 @@ class WishServiceImpl(
 
         wish.maxViewers?.let { max ->
             val currentViews = viewLogRepository.countByWishId(wish.id!!)
-            if (max > 0 && currentViews >= max && owner.id != viewer.id) {
+            val alreadyViewed = viewLogRepository.existsByWishIdAndViewerId(wish.id!!, viewer.id!!)
+
+            if (max > 0 && currentViews >= max && owner.id != viewer.id && !alreadyViewed) {
                 throw AccessDeniedException("Достигнуто ограничение на просмотры")
             }
             if (owner.id != viewer.id) {

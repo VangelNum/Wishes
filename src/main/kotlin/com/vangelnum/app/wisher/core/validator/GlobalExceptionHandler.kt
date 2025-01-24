@@ -16,6 +16,9 @@ class GlobalExceptionHandler {
         const val UNKNOWN_ERROR_MESSAGE = "Произошла неизвестная ошибка"
         const val ACCESS_DENIED_MESSAGE = "Доступ запрещен"
         const val RESOURCE_NOT_FOUND_MESSAGE = "Запрашиваемый ресурс не найден"
+        const val EMAIL_ALREADY_VERIFIED_MESSAGE = "Email уже подтвержден"
+        const val INVALID_VERIFICATION_CODE_MESSAGE = "Неверный код подтверждения"
+        const val EMAIL_SENDING_FAILED_MESSAGE = "Проблема отправки сообщения на почту. Попробуйте использовать другую почту."
     }
 
     @ExceptionHandler(IllegalArgumentException::class)
@@ -66,11 +69,24 @@ class GlobalExceptionHandler {
         request: WebRequest
     ): ResponseEntity<ErrorResponse> {
         val errorResponse = ErrorResponse(
-            message = UNKNOWN_ERROR_MESSAGE,
+            message = ex.message ?: UNKNOWN_ERROR_MESSAGE,
             status = HttpStatus.INTERNAL_SERVER_ERROR.value()
         )
         return ResponseEntity.internalServerError().body(errorResponse)
     }
+
+    @ExceptionHandler(IllegalStateException::class)
+    fun handleIllegalStateException(
+        ex: IllegalStateException,
+        request: WebRequest
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            message = ex.message ?: UNKNOWN_ERROR_MESSAGE,
+            status = HttpStatus.BAD_REQUEST.value()
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+    }
+
 }
 
 data class ErrorResponse(

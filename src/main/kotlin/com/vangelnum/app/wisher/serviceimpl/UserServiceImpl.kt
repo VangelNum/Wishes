@@ -1,6 +1,7 @@
 package com.vangelnum.app.wisher.serviceimpl
 
 import com.vangelnum.app.wisher.core.enums.Role
+import com.vangelnum.app.wisher.core.validator.GlobalExceptionHandler
 import com.vangelnum.app.wisher.core.validator.UserValidator
 import com.vangelnum.app.wisher.entity.User
 import com.vangelnum.app.wisher.model.RegistrationRequest
@@ -12,7 +13,9 @@ import jakarta.persistence.EntityNotFoundException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional // Import Transactional annotation
 import java.util.*
+import java.util.NoSuchElementException
 
 @Service
 class UserServiceImpl(
@@ -22,6 +25,7 @@ class UserServiceImpl(
     private val emailService: EmailService
 ) : UserService {
 
+    @Transactional // Add Transactional annotation to the registerUser method
     override fun registerUser(registrationRequest: RegistrationRequest): User {
         val checkStatus = userValidator.checkUser(registrationRequest)
         if (!checkStatus.isSuccess) {
@@ -42,38 +46,40 @@ class UserServiceImpl(
         )
         val savedUser = userRepository.save(newUser)
 
-        emailService.sendVerificationEmail(registrationRequest.email, verificationCode) // Отправляем email
+        try {
+            emailService.sendVerificationEmail(registrationRequest.email, verificationCode)
+        } catch (e: Exception) {
+            userRepository.delete(savedUser)
+            throw IllegalStateException(GlobalExceptionHandler.EMAIL_SENDING_FAILED_MESSAGE)
+        }
 
         return savedUser
     }
 
-    override fun verifyEmail(email: String, verificationCode: String): Boolean {
+    override fun verifyEmail(email: String, verificationCode: String) {
         val userOptional = userRepository.findByEmail(email)
-        if (userOptional.isEmpty) {
-            return false
-        }
-        val user = userOptional.get()
+        val user = userOptional.orElseThrow { NoSuchElementException("Пользователь с email $email не найден") }
 
         if (user.isEmailVerified) {
-            return true
+            throw IllegalArgumentException(GlobalExceptionHandler.EMAIL_ALREADY_VERIFIED_MESSAGE)
         }
 
         if (user.verificationCode == verificationCode) {
             user.isEmailVerified = true
             user.verificationCode = null
             userRepository.save(user)
-            return true
+            return
+        } else {
+            throw IllegalArgumentException(GlobalExceptionHandler.INVALID_VERIFICATION_CODE_MESSAGE)
         }
-
-        return false
     }
 
-    override fun resendVerificationCode(email: String): Boolean {
+    override fun resendVerificationCode(email: String) {
         val userOptional = userRepository.findByEmail(email)
-        val user = userOptional.get()
+        val user = userOptional.orElseThrow { NoSuchElementException("Пользователь с email $email не найден") }
 
         if (user.isEmailVerified) {
-            return true
+            throw IllegalArgumentException(GlobalExceptionHandler.EMAIL_ALREADY_VERIFIED_MESSAGE)
         }
 
         val newVerificationCode = generateVerificationCode()
@@ -81,12 +87,12 @@ class UserServiceImpl(
         userRepository.save(user)
 
         emailService.sendVerificationEmail(email, newVerificationCode)
-        return true
+        return
     }
 
     private fun generateVerificationCode(): String {
         val random = Random()
-        return String.format("%06d", random.nextInt(1000000)) // Генерируем 6-значный код
+        return String.format("%06d", random.nextInt(1000000))
     }
 
     override fun updateUserAvatar(avatar: String): User {

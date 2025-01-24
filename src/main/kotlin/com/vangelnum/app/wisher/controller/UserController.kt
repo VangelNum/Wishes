@@ -3,6 +3,7 @@ package com.vangelnum.app.wisher.controller
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
 import com.vangelnum.app.wisher.entity.User
 import com.vangelnum.app.wisher.model.RegistrationRequest
+import com.vangelnum.app.wisher.model.ResendVerificationCodeRequest // Импортируйте ResendVerificationCodeRequest
 import com.vangelnum.app.wisher.model.UpdateAvatarRequest
 import com.vangelnum.app.wisher.model.UpdateProfileRequest
 import com.vangelnum.app.wisher.model.VerificationRequest
@@ -30,24 +31,15 @@ class UserController(
     @Operation(summary = "Верификация email пользователя")
     @PostMapping("/verify-email")
     fun verifyEmail(@RequestBody verificationRequest: VerificationRequest): ResponseEntity<String> {
-        val isVerified = userService.verifyEmail(verificationRequest.email, verificationRequest.verificationCode)
-        return if (isVerified) {
-            ResponseEntity.ok("Email успешно подтвержден")
-        } else {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Неверный код подтверждения или email")
-        }
+        userService.verifyEmail(verificationRequest.email, verificationRequest.verificationCode)
+        return ResponseEntity.ok("Email успешно подтвержден")
     }
-
 
     @Operation(summary = "Переотправка кода верификации email")
     @PostMapping("/resend-verification-code")
-    fun resendVerificationCode(@RequestBody verificationRequest: VerificationRequest): ResponseEntity<String> {
-        val isResent = userService.resendVerificationCode(verificationRequest.email)
-        return if (isResent) {
-            ResponseEntity.ok("Новый код верификации отправлен на ваш email")
-        } else {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Не удалось отправить новый код верификации. Проверьте email или попробуйте позже.")
-        }
+    fun resendVerificationCode(@RequestBody resendVerificationCodeRequest: ResendVerificationCodeRequest): ResponseEntity<String> {
+        userService.resendVerificationCode(resendVerificationCodeRequest.email)
+        return ResponseEntity.ok("Новый код верификации отправлен на ваш email")
     }
 
     @Operation(summary = "Информация о текущем пользователе")
