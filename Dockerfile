@@ -1,13 +1,15 @@
-FROM ubuntu:22.04 AS build
+FROM eclipse-temurin:17-jdk-jammy AS build
 
-RUN apt-get update && apt-get install -y openjdk-17-jdk && apt-get clean
+WORKDIR /app
 
-COPY . .
-RUN chmod +x gradlew
-RUN ./gradlew bootJar --no-daemon
+COPY . /app
+
+RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:17-jre-jammy
 
-COPY --from=build /build/libs/wisher-1.jar app.jar
+WORKDIR /app
+
+COPY --from=build /app/build/libs/*.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
