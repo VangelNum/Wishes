@@ -8,4 +8,5 @@ import java.util.*
 interface WishKeyRepository : JpaRepository<WishKey, Long> {
     fun findByKey(key: String): Optional<WishKey>
     fun findByUser(user: User): Optional<WishKey>
+    fun deleteByUserId(userId: Long)
 }

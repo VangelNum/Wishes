@@ -9,6 +9,7 @@ import com.vangelnum.app.wisher.model.RegistrationRequest
 import com.vangelnum.app.wisher.model.UpdateProfileRequest
 import com.vangelnum.app.wisher.repository.PendingUserRepository
 import com.vangelnum.app.wisher.repository.UserRepository
+import com.vangelnum.app.wisher.repository.WishKeyRepository
 import com.vangelnum.app.wisher.service.EmailService
 import com.vangelnum.app.wisher.service.UserService
 import jakarta.persistence.EntityNotFoundException
@@ -25,7 +26,8 @@ class UserServiceImpl(
     private val pendingUserRepository: PendingUserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val userValidator: UserValidator,
-    private val emailService: EmailService
+    private val emailService: EmailService,
+    private val wishKeyRepository: WishKeyRepository
 ) : UserService {
 
     @Transactional
@@ -174,7 +176,9 @@ class UserServiceImpl(
         return userRepository.save(updatedUser)
     }
 
+    @Transactional
     override fun deleteUser(id: Long) {
+        wishKeyRepository.deleteByUserId(id)
         userRepository.deleteById(id)
     }
 }
