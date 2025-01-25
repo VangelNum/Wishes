@@ -18,6 +18,7 @@ class GlobalExceptionHandler {
         const val RESOURCE_NOT_FOUND_MESSAGE = "Запрашиваемый ресурс не найден"
         const val EMAIL_ALREADY_VERIFIED_MESSAGE = "Email уже подтвержден"
         const val INVALID_VERIFICATION_CODE_MESSAGE = "Неверный код подтверждения"
+        const val USER_ALREADY_EXISTS_MESSAGE = "Пользователь уже существует"
         const val EMAIL_SENDING_FAILED_MESSAGE = "Проблема отправки сообщения на почту. Попробуйте использовать другую почту."
     }
 

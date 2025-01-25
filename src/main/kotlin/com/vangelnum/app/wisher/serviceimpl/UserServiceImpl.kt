@@ -3,9 +3,11 @@ package com.vangelnum.app.wisher.serviceimpl
 import com.vangelnum.app.wisher.core.enums.Role
 import com.vangelnum.app.wisher.core.validator.GlobalExceptionHandler
 import com.vangelnum.app.wisher.core.validator.UserValidator
+import com.vangelnum.app.wisher.entity.PendingUser
 import com.vangelnum.app.wisher.entity.User
 import com.vangelnum.app.wisher.model.RegistrationRequest
 import com.vangelnum.app.wisher.model.UpdateProfileRequest
+import com.vangelnum.app.wisher.repository.PendingUserRepository
 import com.vangelnum.app.wisher.repository.UserRepository
 import com.vangelnum.app.wisher.service.EmailService
 import com.vangelnum.app.wisher.service.UserService
@@ -13,70 +15,88 @@ import jakarta.persistence.EntityNotFoundException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional // Import Transactional annotation
+import org.springframework.transaction.annotation.Transactional
 import java.util.*
 import java.util.NoSuchElementException
 
 @Service
 class UserServiceImpl(
     private val userRepository: UserRepository,
+    private val pendingUserRepository: PendingUserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val userValidator: UserValidator,
     private val emailService: EmailService
 ) : UserService {
 
-    @Transactional // Add Transactional annotation to the registerUser method
-    override fun registerUser(registrationRequest: RegistrationRequest): User {
+    @Transactional
+    override fun registerUser(registrationRequest: RegistrationRequest): String {
         val checkStatus = userValidator.checkUser(registrationRequest)
         if (!checkStatus.isSuccess) {
             throw IllegalArgumentException(checkStatus.message)
         }
 
+        if (userRepository.findByEmail(registrationRequest.email).isPresent) {
+            throw IllegalArgumentException(GlobalExceptionHandler.USER_ALREADY_EXISTS_MESSAGE)
+        }
+
         val verificationCode = generateVerificationCode()
 
-        val newUser = User(
+        val pendingUser = PendingUser(
             name = registrationRequest.name,
             password = passwordEncoder.encode(registrationRequest.password),
             email = registrationRequest.email,
             role = Role.USER,
-            avatarUrl = null,
-            coins = 500,
-            verificationCode = verificationCode,
-            isEmailVerified = false
+            verificationCode = verificationCode
         )
-        val savedUser = userRepository.save(newUser)
+        pendingUserRepository.save(pendingUser)
 
         try {
             emailService.sendVerificationEmail(registrationRequest.email, verificationCode)
         } catch (e: Exception) {
-            userRepository.delete(savedUser)
+            pendingUserRepository.delete(pendingUser)
             throw IllegalStateException(GlobalExceptionHandler.EMAIL_SENDING_FAILED_MESSAGE)
         }
 
-        return savedUser
+        return "Код отправлен. Проверьте вашу почту."
     }
 
-    override fun verifyEmail(email: String, verificationCode: String) {
-        val userOptional = userRepository.findByEmail(email)
-        val user = userOptional.orElseThrow { NoSuchElementException("Пользователь с email $email не найден") }
+    @Transactional
+    override fun verifyEmail(email: String, verificationCode: String): User {
+        val pendingUserOptional = pendingUserRepository.findByEmail(email)
+        val pendingUser = pendingUserOptional.orElseThrow { NoSuchElementException("Не найден запрос на регистрацию или пользователь уже существует $email") }
 
-        if (user.isEmailVerified) {
-            throw IllegalArgumentException(GlobalExceptionHandler.EMAIL_ALREADY_VERIFIED_MESSAGE)
-        }
-
-        if (user.verificationCode == verificationCode) {
-            user.isEmailVerified = true
-            user.verificationCode = null
-            userRepository.save(user)
-            return
+        if (pendingUser.verificationCode == verificationCode) {
+            val newUser = User(
+                name = pendingUser.name,
+                password = pendingUser.password,
+                email = pendingUser.email,
+                role = pendingUser.role,
+                avatarUrl = null,
+                coins = 500,
+                isEmailVerified = true,
+                verificationCode = null
+            )
+            val savedUser = userRepository.save(newUser)
+            pendingUserRepository.delete(pendingUser)
+            return savedUser
         } else {
             throw IllegalArgumentException(GlobalExceptionHandler.INVALID_VERIFICATION_CODE_MESSAGE)
         }
     }
 
     override fun resendVerificationCode(email: String) {
+        val pendingUserOptional = pendingUserRepository.findByEmail(email) // Check in PendingUser first
+        if (pendingUserOptional.isPresent) {
+            val pendingUser = pendingUserOptional.get()
+            val newVerificationCode = generateVerificationCode()
+            pendingUser.verificationCode = newVerificationCode
+            pendingUserRepository.save(pendingUser)
+            emailService.sendVerificationEmail(email, newVerificationCode)
+            return
+        }
+
         val userOptional = userRepository.findByEmail(email)
-        val user = userOptional.orElseThrow { NoSuchElementException("Пользователь с email $email не найден") }
+        val user = userOptional.orElseThrow { NoSuchElementException("Запрос на регистрацию или пользователь с email $email не найден") }
 
         if (user.isEmailVerified) {
             throw IllegalArgumentException(GlobalExceptionHandler.EMAIL_ALREADY_VERIFIED_MESSAGE)

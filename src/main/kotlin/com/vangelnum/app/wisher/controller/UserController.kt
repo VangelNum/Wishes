@@ -23,16 +23,16 @@ class UserController(
 ) {
     @Operation(summary = "Регистрация пользователя")
     @PostMapping("/register")
-    fun registerUser(@RequestBody registrationRequest: RegistrationRequest): ResponseEntity<User> {
-        val createdUser = userService.registerUser(registrationRequest)
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser)
+    fun registerUser(@RequestBody registrationRequest: RegistrationRequest): ResponseEntity<String> { // Return ResponseEntity<String>
+        val message = userService.registerUser(registrationRequest) // Get verification message
+        return ResponseEntity.status(HttpStatus.CREATED).body(message) // Return verification message
     }
 
     @Operation(summary = "Верификация email пользователя")
     @PostMapping("/verify-email")
-    fun verifyEmail(@RequestBody verificationRequest: VerificationRequest): ResponseEntity<String> {
-        userService.verifyEmail(verificationRequest.email, verificationRequest.verificationCode)
-        return ResponseEntity.ok("Email успешно подтвержден")
+    fun verifyEmail(@RequestBody verificationRequest: VerificationRequest): ResponseEntity<User> { // Return ResponseEntity<User>
+        val user = userService.verifyEmail(verificationRequest.email, verificationRequest.verificationCode) // Get registered user
+        return ResponseEntity.ok(user) // Return registered user
     }
 
     @Operation(summary = "Переотправка кода верификации email")
