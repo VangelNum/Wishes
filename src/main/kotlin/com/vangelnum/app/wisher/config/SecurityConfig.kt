@@ -1,6 +1,6 @@
 package com.vangelnum.app.wisher.config
 
-import com.vangelnum.app.wisher.repository.UserRepository
+import com.vangelnum.app.wisher.user.repository.UserRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity

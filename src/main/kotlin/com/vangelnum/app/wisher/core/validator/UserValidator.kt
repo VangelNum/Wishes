@@ -1,7 +1,7 @@
 package com.vangelnum.app.wisher.core.validator
 
-import com.vangelnum.app.wisher.model.RegistrationRequest
-import com.vangelnum.app.wisher.repository.UserRepository
+import com.vangelnum.app.wisher.user.model.RegistrationRequest
+import com.vangelnum.app.wisher.user.repository.UserRepository
 import org.springframework.stereotype.Component
 import org.springframework.util.StringUtils
 import java.util.stream.Stream
