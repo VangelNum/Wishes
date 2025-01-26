@@ -3,6 +3,8 @@ package com.vangelnum.app.wisher.wishkey.conroller
 import com.vangelnum.app.wisher.wishkey.dto.WishKeyDto
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
 import com.vangelnum.app.wisher.wishkey.service.WishKeyService
+import com.vangelnum.app.wisher.wishkeylogs.entity.KeyViewLog
+import com.vangelnum.app.wisher.wishkeylogs.service.KeyViewLogService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
@@ -16,7 +18,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/wish-key")
 class WishKeyController(
-    private val wishKeyService: WishKeyService
+    private val wishKeyService: WishKeyService,
+    private val keyViewLogService: KeyViewLogService
 ) {
     @Operation(summary = "Генерация ключа")
     @PostMapping("/generate")
@@ -46,5 +49,13 @@ class WishKeyController(
         val email = getCurrentUserEmail()
         val newWishKey = wishKeyService.regenerateWishKey(email)
         return ResponseEntity.ok(WishKeyDto(newWishKey.key))
+    }
+
+    @Operation(summary = "Получение истории просмотров ключей текущего пользователя")
+    @GetMapping("/key-view-logs/my")
+    fun getKeyViewLogsForCurrentUser(): ResponseEntity<List<KeyViewLog>> {
+        val email = getCurrentUserEmail()
+        val logs = keyViewLogService.getKeyViewLogsForCurrentUser(email)
+        return ResponseEntity.ok(logs)
     }
 }

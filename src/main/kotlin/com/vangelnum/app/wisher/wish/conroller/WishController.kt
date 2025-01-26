@@ -1,28 +1,24 @@
 package com.vangelnum.app.wisher.wish.conroller
 
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
-import com.vangelnum.app.wisher.wishkeylogs.entity.KeyViewLog // Import KeyViewLog
-import com.vangelnum.app.wisher.wishlogs.entity.ViewLog
 import com.vangelnum.app.wisher.wish.entity.Wish
 import com.vangelnum.app.wisher.wish.model.WishCreationRequest
 import com.vangelnum.app.wisher.wish.model.WishDateResponse
 import com.vangelnum.app.wisher.wish.model.WishResponse
 import com.vangelnum.app.wisher.wish.model.WishUpdateRequest
-import com.vangelnum.app.wisher.wishkeylogs.service.KeyViewLogService // Import KeyViewLogService
 import com.vangelnum.app.wisher.wish.service.WishService
+import com.vangelnum.app.wisher.wishlogs.entity.ViewLog
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.lang.IllegalStateException
 
 @Tag(name = "Пожелания")
 @RestController
 @RequestMapping("/api/v1/wish")
 class WishController(
-    private val wishService: WishService,
-    private val keyViewLogService: KeyViewLogService // Inject KeyViewLogService
+    private val wishService: WishService
 ) {
     @Operation(summary = "Создание пожелания")
     @PostMapping
@@ -85,13 +81,5 @@ class WishController(
         val email = getCurrentUserEmail()
         val updatedWish = wishService.updateWish(id, wishUpdateRequest, email)
         return ResponseEntity.ok(updatedWish)
-    }
-
-    @Operation(summary = "Получение истории просмотров ключей текущего пользователя")
-    @GetMapping("/key-view-logs/my")
-    fun getKeyViewLogsForCurrentUser(): ResponseEntity<List<KeyViewLog>> {
-        val email = getCurrentUserEmail()
-        val logs = keyViewLogService.getKeyViewLogsForCurrentUser(email)
-        return ResponseEntity.ok(logs)
     }
 }
