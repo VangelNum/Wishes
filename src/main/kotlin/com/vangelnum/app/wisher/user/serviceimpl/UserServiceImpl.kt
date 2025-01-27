@@ -41,6 +41,10 @@ class UserServiceImpl(
             throw IllegalArgumentException(GlobalExceptionHandler.USER_ALREADY_EXISTS_MESSAGE)
         }
 
+        pendingUserRepository.findByEmail(registrationRequest.email).ifPresent { existingPendingUser ->
+            pendingUserRepository.delete(existingPendingUser)
+        }
+
         val verificationCode = generateVerificationCode()
 
         val pendingUser = PendingUser(
