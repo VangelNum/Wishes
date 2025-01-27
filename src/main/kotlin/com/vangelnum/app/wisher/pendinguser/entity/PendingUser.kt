@@ -11,6 +11,7 @@ data class PendingUser(
     val id: Long? = null,
     val name: String,
     val password: String,
+    @Column(unique = true)
     val email: String,
     @Enumerated(EnumType.STRING)
     val role: Role,
