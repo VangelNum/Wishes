@@ -183,7 +183,7 @@ class UserServiceImpl(
             name = updateProfileRequest.name ?: existingUser.name,
             avatarUrl = updateProfileRequest.avatarUrl ?: existingUser.avatarUrl,
             email = updateProfileRequest.email ?: existingUser.email,
-            password = updateProfileRequest.newPassword.let { passwordEncoder.encode(it) }
+            password = updateProfileRequest.newPassword?.let { passwordEncoder.encode(it) } ?: existingUser.password
         )
         return userRepository.save(updatedUser)
     }
