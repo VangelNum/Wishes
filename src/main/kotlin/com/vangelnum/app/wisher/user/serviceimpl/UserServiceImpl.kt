@@ -154,30 +154,36 @@ class UserServiceImpl(
         val authentication = SecurityContextHolder.getContext().authentication
         val email = authentication.name
 
+        val existingUser = userRepository.findByEmail(email)
+            .orElseThrow { NoSuchElementException("Пользователь не найден") }
+
+        if (!passwordEncoder.matches(updateProfileRequest.currentPassword, existingUser.password)) {
+            throw IllegalArgumentException(GlobalExceptionHandler.WRONG_CURRENT_PASSWORD_MESSAGE)
+        }
+
         updateProfileRequest.name?.let {
             if (!userValidator.checkName(it).isSuccess) {
                 throw IllegalArgumentException(userValidator.checkName(it).message)
             }
         }
+
         updateProfileRequest.email?.let {
             if (!userValidator.checkEmailForUpdate(it, email).isSuccess) {
                 throw IllegalArgumentException(userValidator.checkEmailForUpdate(it, email).message)
             }
         }
-        updateProfileRequest.password?.let {
+
+        updateProfileRequest.newPassword?.let {
             if (!userValidator.checkPassword(it).isSuccess) {
                 throw IllegalArgumentException(userValidator.checkPassword(it).message)
             }
         }
 
-        val existingUser = userRepository.findByEmail(email)
-            .orElseThrow { NoSuchElementException("Пользователь не найден") }
-
         val updatedUser = existingUser.copy(
             name = updateProfileRequest.name ?: existingUser.name,
             avatarUrl = updateProfileRequest.avatarUrl ?: existingUser.avatarUrl,
             email = updateProfileRequest.email ?: existingUser.email,
-            password = updateProfileRequest.password?.let { passwordEncoder.encode(it) } ?: existingUser.password
+            password = updateProfileRequest.newPassword.let { passwordEncoder.encode(it) }
         )
         return userRepository.save(updatedUser)
     }

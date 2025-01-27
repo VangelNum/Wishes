@@ -20,6 +20,7 @@ class GlobalExceptionHandler {
         const val INVALID_VERIFICATION_CODE_MESSAGE = "Неверный код подтверждения"
         const val USER_ALREADY_EXISTS_MESSAGE = "Пользователь уже существует"
         const val EMAIL_SENDING_FAILED_MESSAGE = "Проблема отправки сообщения на почту. Попробуйте использовать другую почту."
+        const val WRONG_CURRENT_PASSWORD_MESSAGE = "Неверный текущий пароль."
     }
 
     @ExceptionHandler(IllegalArgumentException::class)
