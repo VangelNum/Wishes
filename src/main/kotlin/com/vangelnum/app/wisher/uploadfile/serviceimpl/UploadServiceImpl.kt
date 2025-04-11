@@ -24,6 +24,7 @@ class UploadServiceImpl(private val restTemplate: RestTemplate) : UploadService 
             contentType = MediaType.MULTIPART_FORM_DATA
         }
 
+
         val body = LinkedMultiValueMap<String, Any>().apply {
             add("key", imgbbApiKey)
             add("image", object : ByteArrayResource(image.bytes) {
