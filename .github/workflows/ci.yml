@@ -1,48 +1,32 @@
-# .github/workflows/build.yml
 name: Java CI with Gradle
 
-# Триггеры для запуска: пуш в ветку main или develop
 on:
   push:
-    branches: [ "main", "develop" ]
-  pull_request:
-    branches: [ "main" ] # Можно добавить запуск и для Pull Request'ов
+    branches: [ "main" ]
 
 jobs:
   build:
-    # Запускать на последней версии Ubuntu
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Получение кода из репозитория
       - name: Checkout repository
-        uses: actions/checkout@v4 # Используйте актуальную версию
+        uses: actions/checkout@v4
 
-      # 2. Настройка JDK 17 (Temurin, как в вашем Dockerfile)
       - name: Set up JDK 17
-        uses: actions/setup-java@v4 # Используйте актуальную версию
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          # Кэширование зависимостей Gradle для ускорения последующих сборок
           cache: gradle
 
-      # 3. Предоставление прав на выполнение gradlew
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 4. Сборка проекта с помощью Gradle
-      #    --no-daemon рекомендуется для CI окружений
       - name: Build with Gradle
         run: ./gradlew bootJar --no-daemon
 
-      # 5. Загрузка собранного JAR-файла как артефакта
-      #    Артефакт будет доступен для скачивания со страницы сборки в GitHub Actions
-      #    и может быть использован в других job'ах или workflow (например, для деплоя)
       - name: Upload artifact
-        uses: actions/upload-artifact@v4 # Используйте актуальную версию
+        uses: actions/upload-artifact@v4
         with:
-          name: app-jar # Имя артефакта
-          # Путь к файлу(ам), который нужно загрузить.
-          # '*'.jar найдет любой .jar файл в указанной директории
+          name: app-jar
           path: build/libs/*.jar
