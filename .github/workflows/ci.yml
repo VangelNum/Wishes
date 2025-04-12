@@ -1,0 +1,65 @@
+name: Build and Push Docker Image
+
+# Запускать при пуше в ветку main
+on:
+  push:
+    branches: [ "main" ]
+  # Можно добавить и другие триггеры, например, при создании релиза:
+  # release:
+  #   types: [ published ]
+  # Или вручную через интерфейс GitHub Actions:
+  # workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest # Использовать последнюю версию Ubuntu
+
+    permissions:
+      contents: read       # Нужно для checkout
+      packages: write      # Нужно для push в GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Скачиваем код репозитория
+
+      # Установка QEMU для возможности сборки multi-platform образов (опционально, но полезно)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Установка Docker Buildx (улучшенный сборщик Docker)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Логин в GitHub Container Registry (GHCR)
+      # Использует автоматически создаваемый GITHUB_TOKEN
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }} # Имя пользователя или организации GitHub
+          password: ${{ secrets.GITHUB_TOKEN }} # Специальный токен GitHub Actions
+
+      # Генерация метаданных для Docker-образа (теги, лейблы)
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }} # Имя образа: ghcr.io/username/repo
+          tags: |
+            # Тег latest для ветки main
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Тег по хешу коммита (например, sha-a1b2c3d)
+            type=sha,prefix=sha-
+            # Можно добавить тег по имени ветки или тегу Git, если нужно
+
+      # Сборка и пуш Docker-образа с использованием вашего Dockerfile
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Искать Dockerfile в корне репозитория
+          file: ./Dockerfile # Указываем имя вашего Dockerfile (если оно стандартное, можно не указывать)
+          push: true # Пушить образ после сборки
+          tags: ${{ steps.meta.outputs.tags }} # Использовать сгенерированные теги
+          labels: ${{ steps.meta.outputs.labels }} # Добавить сгенерированные лейблы
+          cache-from: type=gha # Использовать кеш GitHub Actions (ускоряет последующие сборки)
+          cache-to: type=gha,mode=max
