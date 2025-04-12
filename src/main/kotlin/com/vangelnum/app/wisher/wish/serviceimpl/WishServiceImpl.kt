@@ -101,6 +101,40 @@ class WishServiceImpl(
         return wish
     }
 
+    override fun getLastWishByKey(key: String, viewerEmail: String): Wish {
+        val wishKey = wishKeyRepository.findByKey(key).orElseThrow { NoSuchElementException("Ключ не найден") }
+        val owner = wishKey.user
+        val viewer = getUserByEmail(viewerEmail)
+
+        if (owner.id != viewer.id) {
+            keyViewLogService.createKeyViewLogForCurrentUser(key, viewerEmail)
+        }
+
+        val wishes = wishRepository.findByUser(owner)
+            .filter { it.openDate <= LocalDate.now() }
+
+        val lastWish = wishes.maxByOrNull { it.id ?: 0 }
+            ?: throw NoSuchElementException("У пользователя с данным ключом нет доступных пожеланий")
+
+
+        lastWish.maxViewers?.let { max ->
+            val currentViews = viewLogRepository.countByWishId(lastWish.id!!)
+            val alreadyViewed = viewLogRepository.existsByWishIdAndViewerId(lastWish.id!!, viewer.id!!)
+
+            if (max > 0 && currentViews >= max && owner.id != viewer.id && !alreadyViewed) {
+                throw AccessDeniedException("Достигнуто ограничение на просмотры")
+            }
+            if (owner.id != viewer.id) {
+                viewLogService.createViewLog(viewer, owner, lastWish)
+            }
+        } ?: run {
+            if (owner.id != viewer.id) {
+                viewLogService.createViewLog(viewer, owner, lastWish)
+            }
+        }
+        return lastWish
+    }
+
     override fun getViewLogsForWish(wishId: Long, userEmail: String): List<ViewLog> {
         val wish = getWishById(wishId)
         checkWishOwnership(wish, userEmail)

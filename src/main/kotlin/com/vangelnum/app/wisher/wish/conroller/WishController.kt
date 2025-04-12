@@ -41,14 +41,18 @@ class WishController(
     fun getWishByKeyAndId(
         @PathVariable key: String,
         @PathVariable wishId: Int
-    ): ResponseEntity<*> {
+    ): ResponseEntity<Wish> {
         val email = getCurrentUserEmail()
-        return try {
-            val wish = wishService.getWishByKeyAndId(key, wishId, email)
-            ResponseEntity.ok(wish)
-        } catch (e: IllegalStateException) {
-            throw e
-        }
+        val wish = wishService.getWishByKeyAndId(key, wishId, email)
+        return ResponseEntity.ok(wish)
+    }
+
+    @Operation(summary = "Получение последнего пожелания пользователя по ключу")
+    @GetMapping("/{key}/last")
+    fun getLastWishByKey(@PathVariable key: String): ResponseEntity<Wish> {
+        val email = getCurrentUserEmail()
+        val lastWish = wishService.getLastWishByKey(key, email)
+        return ResponseEntity.ok(lastWish)
     }
 
     @Operation(summary = "Получение истории просмотров для пожелания")
