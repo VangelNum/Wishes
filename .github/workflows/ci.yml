@@ -31,11 +31,5 @@ jobs:
           name: app-jar
           path: build/libs/wisher-1.jar
 
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-jar
-          path: build/libs/wisher-1.jar
-
       - name: Build Docker image
         run: docker build -t wishesapp .
