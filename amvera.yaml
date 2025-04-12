@@ -1,2 +1,6 @@
+meta:
+  environment: docker
+  buildFrom: image
+  imageName: vangelnum/wishesapp:latest
 run:
   containerPort: 8080
