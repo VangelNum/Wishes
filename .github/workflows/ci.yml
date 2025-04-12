@@ -1,11 +1,11 @@
-name: Java CI with Gradle
+name: Java CI with Gradle and Docker
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-docker:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,3 +30,12 @@ jobs:
         with:
           name: app-jar
           path: build/libs/*.jar
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs/
+
+      - name: Build Docker image
+        run: docker build -t wishesapp .
