@@ -1,7 +1,0 @@
-.git
-.github
-.idea
-build/
-out/
-*.log
-.gradle/
