@@ -1,11 +1,11 @@
-name: Java CI with Gradle and Docker
+name: Java CI with Gradle (No Docker Push)
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-docker:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,17 +22,5 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew bootJar --no-daemon
-
-      - name: List build artifacts
-        run: ls -l build/libs/
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-jar
-          path: build/libs/wisher-1.jar
-
-      - name: Build Docker image
-        run: docker build -t wishesapp .
+      - name: Build and Test with Gradle
+        run: ./gradlew build --no-daemon
