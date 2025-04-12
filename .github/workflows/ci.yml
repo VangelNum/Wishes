@@ -25,6 +25,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew bootJar --no-daemon
 
+      - name: List build artifacts
+        run: ls -l build/libs/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
