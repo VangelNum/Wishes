@@ -11,6 +11,7 @@ data class Wish(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Lob
     @Column(nullable = false)
     val text: String,
 
@@ -21,6 +22,7 @@ data class Wish(
     @Column(nullable = false)
     val wishDate: LocalDate,
 
+    @Lob
     @Column
     val image: String? = null,
 

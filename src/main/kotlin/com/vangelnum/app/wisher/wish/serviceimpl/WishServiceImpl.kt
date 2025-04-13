@@ -106,10 +106,6 @@ class WishServiceImpl(
         val owner = wishKey.user
         val viewer = getUserByEmail(viewerEmail)
 
-        if (owner.id != viewer.id) {
-            keyViewLogService.createKeyViewLogForCurrentUser(key, viewerEmail)
-        }
-
         val wishes = wishRepository.findByUser(owner)
             .filter { it.openDate <= LocalDate.now() }
 
