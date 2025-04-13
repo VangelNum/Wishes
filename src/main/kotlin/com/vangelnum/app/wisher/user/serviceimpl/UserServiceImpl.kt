@@ -66,6 +66,7 @@ class UserServiceImpl(
                 role = Role.USER,
                 verificationCode = verificationCode
             )
+
             pendingUserRepository.save(pendingUser)
 
             try {
