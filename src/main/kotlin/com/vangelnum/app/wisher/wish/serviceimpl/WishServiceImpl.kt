@@ -112,7 +112,6 @@ class WishServiceImpl(
         val lastWish = wishes.maxByOrNull { it.id ?: 0 }
             ?: throw NoSuchElementException("У пользователя с данным ключом нет доступных пожеланий")
 
-
         lastWish.maxViewers?.let { max ->
             val currentViews = viewLogRepository.countByWishId(lastWish.id!!)
             val alreadyViewed = viewLogRepository.existsByWishIdAndViewerId(lastWish.id!!, viewer.id!!)
