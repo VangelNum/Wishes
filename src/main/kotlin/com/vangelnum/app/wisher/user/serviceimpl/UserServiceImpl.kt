@@ -41,29 +41,42 @@ class UserServiceImpl(
             throw IllegalArgumentException(GlobalExceptionHandler.USER_ALREADY_EXISTS_MESSAGE)
         }
 
-        pendingUserRepository.findByEmail(registrationRequest.email).ifPresent { existingPendingUser ->
-            pendingUserRepository.delete(existingPendingUser)
+        val existingPendingUserOptional = pendingUserRepository.findByEmail(registrationRequest.email)
+
+        if (existingPendingUserOptional.isPresent) {
+            val existingPendingUser = existingPendingUserOptional.get()
+            val verificationCode = generateVerificationCode()
+            existingPendingUser.verificationCode = verificationCode
+            pendingUserRepository.save(existingPendingUser)
+
+            try {
+                emailService.sendVerificationEmail(registrationRequest.email, verificationCode)
+            } catch (e: Exception) {
+                throw IllegalStateException(GlobalExceptionHandler.EMAIL_SENDING_FAILED_MESSAGE)
+            }
+
+            return "Код повторно отправлен. Проверьте вашу почту."
+        } else {
+            val verificationCode = generateVerificationCode()
+
+            val pendingUser = PendingUser(
+                name = registrationRequest.name,
+                password = passwordEncoder.encode(registrationRequest.password),
+                email = registrationRequest.email,
+                role = Role.USER,
+                verificationCode = verificationCode
+            )
+            pendingUserRepository.save(pendingUser)
+
+            try {
+                emailService.sendVerificationEmail(registrationRequest.email, verificationCode)
+            } catch (e: Exception) {
+                pendingUserRepository.delete(pendingUser)
+                throw IllegalStateException(GlobalExceptionHandler.EMAIL_SENDING_FAILED_MESSAGE)
+            }
+
+            return "Код отправлен. Проверьте вашу почту."
         }
-
-        val verificationCode = generateVerificationCode()
-
-        val pendingUser = PendingUser(
-            name = registrationRequest.name,
-            password = passwordEncoder.encode(registrationRequest.password),
-            email = registrationRequest.email,
-            role = Role.USER,
-            verificationCode = verificationCode
-        )
-        pendingUserRepository.save(pendingUser)
-
-        try {
-            emailService.sendVerificationEmail(registrationRequest.email, verificationCode)
-        } catch (e: Exception) {
-            pendingUserRepository.delete(pendingUser)
-            throw IllegalStateException(GlobalExceptionHandler.EMAIL_SENDING_FAILED_MESSAGE)
-        }
-
-        return "Код отправлен. Проверьте вашу почту."
     }
 
     @Transactional
