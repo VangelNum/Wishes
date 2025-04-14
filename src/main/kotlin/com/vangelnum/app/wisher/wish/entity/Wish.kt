@@ -1,7 +1,14 @@
 package com.vangelnum.app.wisher.wish.entity
 
 import com.vangelnum.app.wisher.user.entity.User
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import java.time.LocalDate
 
 @Entity
@@ -11,8 +18,7 @@ data class Wish(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     val text: String,
 
     @ManyToOne
@@ -22,8 +28,7 @@ data class Wish(
     @Column(nullable = false)
     val wishDate: LocalDate,
 
-    @Lob
-    @Column
+    @Column(columnDefinition = "TEXT")
     val image: String? = null,
 
     @Column(nullable = false)
