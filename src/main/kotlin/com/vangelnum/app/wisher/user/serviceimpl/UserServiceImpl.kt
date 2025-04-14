@@ -11,8 +11,10 @@ import com.vangelnum.app.wisher.user.model.UpdateProfileRequest
 import com.vangelnum.app.wisher.user.repository.UserRepository
 import com.vangelnum.app.wisher.user.service.EmailService
 import com.vangelnum.app.wisher.user.service.UserService
+import com.vangelnum.app.wisher.wish.repository.WishRepository
 import com.vangelnum.app.wisher.wishkey.repository.WishKeyRepository
 import com.vangelnum.app.wisher.wishkeylogs.repository.KeyViewLogRepository
+import com.vangelnum.app.wisher.wishlogs.repository.ViewLogRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -29,7 +31,9 @@ class UserServiceImpl(
     private val userValidator: UserValidator,
     private val emailService: EmailService,
     private val wishKeyRepository: WishKeyRepository,
-    private val keyViewLogRepository: KeyViewLogRepository
+    private val keyViewLogRepository: KeyViewLogRepository,
+    private val viewLogRepository: ViewLogRepository,
+    private val wishRepository: WishRepository
 ) : UserService {
 
     @Transactional
@@ -211,8 +215,14 @@ class UserServiceImpl(
 
     @Transactional
     override fun deleteUser(id: Long) {
-        wishKeyRepository.deleteByUserId(id)
+        if (!userRepository.existsById(id)) {
+            throw EntityNotFoundException("Пользователь с id $id не найден")
+        }
+        viewLogRepository.deleteByViewerId(id)
+        viewLogRepository.deleteByWishOwnerId(id)
         keyViewLogRepository.deleteByViewerId(id)
+        wishRepository.deleteByUserId(id)
+        wishKeyRepository.deleteByUserId(id)
         userRepository.deleteById(id)
     }
 }

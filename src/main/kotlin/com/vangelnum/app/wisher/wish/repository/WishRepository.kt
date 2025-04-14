@@ -8,4 +8,5 @@ import java.util.Optional
 interface WishRepository : JpaRepository<Wish, Long> {
     fun findByUser(user: User): List<Wish>
     fun findByUserAndId(user: User, id: Long): Optional<Wish>
+    fun deleteByUserId(userId: Long): Long
 }
