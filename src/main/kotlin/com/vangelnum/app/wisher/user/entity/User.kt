@@ -46,5 +46,8 @@ data class User(
     val registrationTime: LocalDateTime = LocalDateTime.now(),
 
     @Column
-    var lastLoginTime: LocalDateTime? = null
+    var lastLoginTime: LocalDateTime? = null,
+
+    @Column(nullable = false)
+    var wishesCreatedCount: Int = 0,
 )

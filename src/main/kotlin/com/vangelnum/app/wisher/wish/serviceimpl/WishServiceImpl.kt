@@ -46,6 +46,8 @@ class WishServiceImpl(
             throw IllegalArgumentException("Не хватает монет для создания пожелания")
         }
         user.coins -= wishCreationRequest.cost
+        user.wishesCreatedCount += 1
+
         userRepository.save(user)
         val wish = Wish(
             text = wishCreationRequest.text,
@@ -130,9 +132,9 @@ class WishServiceImpl(
         return lastWish
     }
 
-    override fun getUserWishesCount(email: String): Long {
+    override fun getUserWishesCount(email: String): Int {
         val user = getUserByEmail(email)
-        return wishRepository.countByUser(user)
+        return user.wishesCreatedCount
     }
 
     override fun getViewLogsForWish(wishId: Long, userEmail: String): List<ViewLog> {

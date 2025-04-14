@@ -93,11 +93,12 @@ class UserServiceImpl(
                 email = pendingUser.email,
                 role = pendingUser.role,
                 avatarUrl = null,
-                coins = 500,
+                coins = 100,
                 isEmailVerified = true,
                 verificationCode = null,
                 registrationTime = LocalDateTime.now(),
-                lastLoginTime = null
+                lastLoginTime = null,
+                wishesCreatedCount = 0
             )
             val savedUser = userRepository.save(newUser)
             pendingUserRepository.delete(pendingUser)

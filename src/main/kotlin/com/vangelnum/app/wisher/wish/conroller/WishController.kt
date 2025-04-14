@@ -64,7 +64,7 @@ class WishController(
 
     @Operation(summary = "Получение количества отправленных пожеланий текущего пользователя")
     @GetMapping("/my/count")
-    fun getCurrentUserWishesCount(): ResponseEntity<Long> {
+    fun getCurrentUserWishesCount(): ResponseEntity<Int> {
         val email = getCurrentUserEmail()
         return ResponseEntity.ok(wishService.getUserWishesCount(email))
     }
