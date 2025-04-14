@@ -144,6 +144,8 @@ class WishServiceImpl(
     override fun deleteWish(id: Long, userEmail: String) {
         val wish = getWishById(id)
         checkWishOwnership(wish, userEmail)
+        val viewLogs = viewLogRepository.findByWishId(id)
+        viewLogRepository.deleteAll(viewLogs)
         wishRepository.delete(wish)
     }
 
