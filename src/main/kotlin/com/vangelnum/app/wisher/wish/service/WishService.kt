@@ -16,4 +16,5 @@ interface WishService {
     fun getUserWishes(email: String): List<WishResponse>
     fun updateWish(id: Long, wishUpdateRequest: WishUpdateRequest, email: String): Wish
     fun getLastWishByKey(key: String, viewerEmail: String): Wish
+    fun getUserWishesCount(email: String): Long
 }

@@ -62,6 +62,13 @@ class WishController(
         return ResponseEntity.ok(lastWish)
     }
 
+    @Operation(summary = "Получение количества отправленных пожеланий текущего пользователя")
+    @GetMapping("/my/count")
+    fun getCurrentUserWishesCount(): ResponseEntity<Long> {
+        val email = getCurrentUserEmail()
+        return ResponseEntity.ok(wishService.getUserWishesCount(email))
+    }
+
     @Operation(summary = "Получение истории просмотров для пожелания")
     @GetMapping("/{wishId}/view-logs")
     fun getViewLogsForWish(@PathVariable wishId: Long): ResponseEntity<List<ViewLog>> {

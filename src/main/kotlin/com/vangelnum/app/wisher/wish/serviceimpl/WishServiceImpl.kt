@@ -130,6 +130,11 @@ class WishServiceImpl(
         return lastWish
     }
 
+    override fun getUserWishesCount(email: String): Long {
+        val user = getUserByEmail(email)
+        return wishRepository.countByUser(user)
+    }
+
     override fun getViewLogsForWish(wishId: Long, userEmail: String): List<ViewLog> {
         val wish = getWishById(wishId)
         checkWishOwnership(wish, userEmail)
