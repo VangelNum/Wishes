@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface KeyViewLogRepository : JpaRepository<KeyViewLog, Long> {
     fun findByViewer(viewer: User): List<KeyViewLog>
+    fun deleteByViewerId(userId: Long)
 }

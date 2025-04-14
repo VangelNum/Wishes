@@ -12,6 +12,7 @@ import com.vangelnum.app.wisher.user.repository.UserRepository
 import com.vangelnum.app.wisher.user.service.EmailService
 import com.vangelnum.app.wisher.user.service.UserService
 import com.vangelnum.app.wisher.wishkey.repository.WishKeyRepository
+import com.vangelnum.app.wisher.wishkeylogs.repository.KeyViewLogRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -27,7 +28,8 @@ class UserServiceImpl(
     private val passwordEncoder: PasswordEncoder,
     private val userValidator: UserValidator,
     private val emailService: EmailService,
-    private val wishKeyRepository: WishKeyRepository
+    private val wishKeyRepository: WishKeyRepository,
+    private val keyViewLogRepository: KeyViewLogRepository
 ) : UserService {
 
     @Transactional
@@ -210,6 +212,7 @@ class UserServiceImpl(
     @Transactional
     override fun deleteUser(id: Long) {
         wishKeyRepository.deleteByUserId(id)
+        keyViewLogRepository.deleteByViewerId(id)
         userRepository.deleteById(id)
     }
 }
