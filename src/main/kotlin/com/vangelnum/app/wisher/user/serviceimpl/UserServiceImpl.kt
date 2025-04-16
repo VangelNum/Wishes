@@ -6,7 +6,9 @@ import com.vangelnum.app.wisher.core.validator.UserValidator
 import com.vangelnum.app.wisher.pendinguser.entity.PendingUser
 import com.vangelnum.app.wisher.pendinguser.repository.PendingUserRepository
 import com.vangelnum.app.wisher.user.entity.User
+import com.vangelnum.app.wisher.user.model.DailyLoginBonusResponse
 import com.vangelnum.app.wisher.user.model.RegistrationRequest
+import com.vangelnum.app.wisher.user.model.RemainingBonusTime
 import com.vangelnum.app.wisher.user.model.UpdateProfileRequest
 import com.vangelnum.app.wisher.user.repository.UserRepository
 import com.vangelnum.app.wisher.user.service.EmailService
@@ -20,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 
@@ -224,5 +227,74 @@ class UserServiceImpl(
         wishRepository.deleteByUserId(id)
         wishKeyRepository.deleteByUserId(id)
         userRepository.deleteById(id)
+    }
+
+    override fun getDailyLoginBonusInfo(email: String): DailyLoginBonusResponse {
+        val user = getUserByEmailForBonus(email)
+        val currentStreak = user.dailyLoginBonusStreak
+        val nextBonusCoins = calculateDailyBonus(currentStreak + 1)
+        return DailyLoginBonusResponse(0, currentStreak, nextBonusCoins)
+    }
+
+    @Transactional
+    override fun claimDailyLoginBonus(email: String): DailyLoginBonusResponse {
+        val user = getUserByEmailForBonus(email)
+        val now = LocalDateTime.now()
+        val lastBonusTime = user.lastDailyLoginBonusTime
+
+        if (lastBonusTime != null && lastBonusTime.toLocalDate() == now.toLocalDate()) {
+            throw IllegalStateException("Вы уже получили ежедневный бонус сегодня.")
+        }
+
+        val bonusCoins = calculateDailyBonus(user.dailyLoginBonusStreak + 1)
+        val newStreak = if (lastBonusTime != null && lastBonusTime.plusDays(1).toLocalDate() == now.toLocalDate()) {
+            (user.dailyLoginBonusStreak + 1).coerceAtMost(10)
+        } else if (lastBonusTime == null) {
+            1
+        }
+        else {
+            1
+        }
+
+        val updatedUser = user.copy(
+            coins = user.coins + bonusCoins,
+            dailyLoginBonusStreak = newStreak,
+            lastDailyLoginBonusTime = now
+        )
+        userRepository.save(updatedUser)
+
+        val nextBonusCoins = calculateDailyBonus(newStreak + 1)
+        return DailyLoginBonusResponse(bonusCoins, newStreak, nextBonusCoins)
+    }
+
+    private fun calculateDailyBonus(streak: Int): Int {
+        return (streak.coerceIn(1, 10)) * 5
+    }
+
+    private fun getUserByEmailForBonus(email: String): User {
+        return userRepository.findByEmail(email)
+            .orElseThrow { NoSuchElementException("Пользователь с email $email не найден") }
+    }
+
+    override fun getRemainingTimeToNextBonus(email: String): RemainingBonusTime {
+        val user = getUserByEmailForBonus(email)
+        val lastBonusTime = user.lastDailyLoginBonusTime
+
+        if (lastBonusTime == null) {
+            return RemainingBonusTime(0, 0)
+        }
+
+        val nextBonusTime = lastBonusTime.plusDays(1)
+        val currentTime = LocalDateTime.now()
+
+        if (currentTime.isAfter(nextBonusTime)) {
+            return RemainingBonusTime(0, 0)
+        }
+
+        val durationUntilNextBonus = Duration.between(currentTime, nextBonusTime)
+        val hours = durationUntilNextBonus.toHours()
+        val minutes = durationUntilNextBonus.toMinutes() % 60
+
+        return RemainingBonusTime(hours, minutes)
     }
 }

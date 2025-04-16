@@ -11,7 +11,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.LocalDateTime
 
-
 @Entity
 @Table(name = "users")
 data class User(
@@ -50,4 +49,10 @@ data class User(
 
     @Column(nullable = false)
     var wishesCreatedCount: Int = 0,
+
+    @Column
+    var dailyLoginBonusStreak: Int = 0,
+
+    @Column
+    var lastDailyLoginBonusTime: LocalDateTime? = null
 )

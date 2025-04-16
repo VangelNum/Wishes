@@ -2,7 +2,9 @@ package com.vangelnum.app.wisher.user.conroller
 
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
 import com.vangelnum.app.wisher.user.entity.User
+import com.vangelnum.app.wisher.user.model.DailyLoginBonusResponse
 import com.vangelnum.app.wisher.user.model.RegistrationRequest
+import com.vangelnum.app.wisher.user.model.RemainingBonusTime
 import com.vangelnum.app.wisher.user.model.ResendVerificationCodeRequest
 import com.vangelnum.app.wisher.user.model.UpdateAvatarRequest
 import com.vangelnum.app.wisher.user.model.UpdateProfileRequest
@@ -92,5 +94,29 @@ class UserController(
     fun deleteUser(@PathVariable id: Long): ResponseEntity<Void> {
         userService.deleteUser(id)
         return ResponseEntity.noContent().build()
+    }
+
+    @Operation(summary = "Получение информации о ежедневном бонусе")
+    @GetMapping("/daily-login-bonus-info")
+    fun getDailyLoginBonusInfo(): ResponseEntity<DailyLoginBonusResponse> {
+        val email = getCurrentUserEmail()
+        val bonusInfo = userService.getDailyLoginBonusInfo(email)
+        return ResponseEntity.ok(bonusInfo)
+    }
+
+    @Operation(summary = "Получение информации о оставшемся времени ожидания бонуса")
+    @GetMapping("/daily-bonus/remaining-time")
+    fun getRemainingBonusTime(): ResponseEntity<RemainingBonusTime> {
+        val email = getCurrentUserEmail()
+        val remainingTime = userService.getRemainingTimeToNextBonus(email)
+        return ResponseEntity.ok(remainingTime)
+    }
+
+    @Operation(summary = "Запрос на получение ежедневного бонуса")
+    @PostMapping("/daily-login-bonus")
+    fun claimDailyLoginBonus(): ResponseEntity<DailyLoginBonusResponse> {
+        val email = getCurrentUserEmail()
+        val bonusResponse = userService.claimDailyLoginBonus(email)
+        return ResponseEntity.ok(bonusResponse)
     }
 }
