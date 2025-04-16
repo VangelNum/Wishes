@@ -2,6 +2,7 @@ package com.vangelnum.app.wisher.user.conroller
 
 import com.vangelnum.app.wisher.core.utils.getCurrentUserEmail
 import com.vangelnum.app.wisher.user.entity.User
+import com.vangelnum.app.wisher.user.model.AdRewardResponse
 import com.vangelnum.app.wisher.user.model.DailyBonusStateResponse
 import com.vangelnum.app.wisher.user.model.DailyLoginBonusResponse
 import com.vangelnum.app.wisher.user.model.RegistrationRequest
@@ -109,5 +110,13 @@ class UserController(
         val email = getCurrentUserEmail()
         val bonusResponse = userService.claimDailyLoginBonus(email)
         return ResponseEntity.ok(bonusResponse)
+    }
+
+    @Operation(summary = "Запрос на получение награды за просмотр рекламы")
+    @PostMapping("/claim-ad-reward")
+    fun claimAdReward(): ResponseEntity<AdRewardResponse> {
+        val email = getCurrentUserEmail()
+        val adRewardResponse = userService.claimAdReward(email)
+        return ResponseEntity.ok(adRewardResponse)
     }
 }

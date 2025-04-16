@@ -6,6 +6,7 @@ import com.vangelnum.app.wisher.core.validator.UserValidator
 import com.vangelnum.app.wisher.pendinguser.entity.PendingUser
 import com.vangelnum.app.wisher.pendinguser.repository.PendingUserRepository
 import com.vangelnum.app.wisher.user.entity.User
+import com.vangelnum.app.wisher.user.model.AdRewardResponse
 import com.vangelnum.app.wisher.user.model.DailyBonusStateResponse
 import com.vangelnum.app.wisher.user.model.DailyLoginBonusResponse
 import com.vangelnum.app.wisher.user.model.RegistrationRequest
@@ -308,5 +309,32 @@ class UserServiceImpl(
         val minutes = durationUntilNextBonus.toMinutes() % 60
 
         return RemainingBonusTime(hours, minutes)
+    }
+
+    @Transactional
+    override fun claimAdReward(email: String): AdRewardResponse {
+        val user = getUserByEmailForBonus(email)
+        val now = LocalDateTime.now()
+        val lastAdViewTime = user.lastAdViewTime
+
+        if (lastAdViewTime != null && lastAdViewTime.plusMinutes(1).isAfter(now)) {
+            val nextAvailableTime = lastAdViewTime.plusMinutes(1)
+            val duration = Duration.between(now, nextAvailableTime)
+            val seconds = duration.seconds
+            return AdRewardResponse(
+                coinsAwarded = 0,
+                message = "Повторный просмотр рекламы будет доступен через ${seconds} секунд.",
+                nextAdViewAvailableTime = nextAvailableTime
+            )
+        }
+
+        user.coins += 10
+        user.lastAdViewTime = now
+        userRepository.save(user)
+
+        return AdRewardResponse(
+            coinsAwarded = 10,
+            message = "Вы получили 10 монет за просмотр рекламы."
+        )
     }
 }

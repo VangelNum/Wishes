@@ -1,6 +1,7 @@
 package com.vangelnum.app.wisher.user.service
 
 import com.vangelnum.app.wisher.user.entity.User
+import com.vangelnum.app.wisher.user.model.AdRewardResponse
 import com.vangelnum.app.wisher.user.model.DailyBonusStateResponse
 import com.vangelnum.app.wisher.user.model.DailyLoginBonusResponse
 import com.vangelnum.app.wisher.user.model.RegistrationRequest
@@ -18,4 +19,5 @@ interface UserService {
     fun resendVerificationCode(email: String)
     fun claimDailyLoginBonus(email: String): DailyLoginBonusResponse
     fun getDailyBonusState(email: String): DailyBonusStateResponse
+    fun claimAdReward(email: String): AdRewardResponse
 }
