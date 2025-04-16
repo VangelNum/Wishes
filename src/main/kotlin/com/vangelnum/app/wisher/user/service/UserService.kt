@@ -1,9 +1,9 @@
 package com.vangelnum.app.wisher.user.service
 
 import com.vangelnum.app.wisher.user.entity.User
+import com.vangelnum.app.wisher.user.model.DailyBonusStateResponse
 import com.vangelnum.app.wisher.user.model.DailyLoginBonusResponse
 import com.vangelnum.app.wisher.user.model.RegistrationRequest
-import com.vangelnum.app.wisher.user.model.RemainingBonusTime
 import com.vangelnum.app.wisher.user.model.UpdateProfileRequest
 
 interface UserService {
@@ -16,7 +16,6 @@ interface UserService {
     fun deleteUser(id: Long)
     fun verifyEmail(email: String, verificationCode: String): User
     fun resendVerificationCode(email: String)
-    fun getDailyLoginBonusInfo(email: String): DailyLoginBonusResponse
     fun claimDailyLoginBonus(email: String): DailyLoginBonusResponse
-    fun getRemainingTimeToNextBonus(email: String): RemainingBonusTime
+    fun getDailyBonusState(email: String): DailyBonusStateResponse
 }

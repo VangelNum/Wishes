@@ -6,6 +6,7 @@ import com.vangelnum.app.wisher.core.validator.UserValidator
 import com.vangelnum.app.wisher.pendinguser.entity.PendingUser
 import com.vangelnum.app.wisher.pendinguser.repository.PendingUserRepository
 import com.vangelnum.app.wisher.user.entity.User
+import com.vangelnum.app.wisher.user.model.DailyBonusStateResponse
 import com.vangelnum.app.wisher.user.model.DailyLoginBonusResponse
 import com.vangelnum.app.wisher.user.model.RegistrationRequest
 import com.vangelnum.app.wisher.user.model.RemainingBonusTime
@@ -24,7 +25,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Random
 
 @Service
 class UserServiceImpl(
@@ -229,13 +230,6 @@ class UserServiceImpl(
         userRepository.deleteById(id)
     }
 
-    override fun getDailyLoginBonusInfo(email: String): DailyLoginBonusResponse {
-        val user = getUserByEmailForBonus(email)
-        val currentStreak = user.dailyLoginBonusStreak
-        val nextBonusCoins = calculateDailyBonus(currentStreak + 1)
-        return DailyLoginBonusResponse(0, currentStreak, nextBonusCoins)
-    }
-
     @Transactional
     override fun claimDailyLoginBonus(email: String): DailyLoginBonusResponse {
         val user = getUserByEmailForBonus(email)
@@ -267,6 +261,17 @@ class UserServiceImpl(
         return DailyLoginBonusResponse(bonusCoins, newStreak, nextBonusCoins)
     }
 
+    override fun getDailyBonusState(email: String): DailyBonusStateResponse {
+        val bonusInfo = getDailyLoginBonusInfo(email)
+        val remainingTime = getRemainingTimeToNextBonus(email)
+        return DailyBonusStateResponse(
+            currentStreak = bonusInfo.currentStreak,
+            nextBonusCoins = bonusInfo.nextBonusCoins,
+            remainingHours = remainingTime.hours,
+            remainingMinutes = remainingTime.minutes
+        )
+    }
+
     private fun calculateDailyBonus(streak: Int): Int {
         return (streak.coerceIn(1, 10)) * 5
     }
@@ -276,7 +281,14 @@ class UserServiceImpl(
             .orElseThrow { NoSuchElementException("Пользователь с email $email не найден") }
     }
 
-    override fun getRemainingTimeToNextBonus(email: String): RemainingBonusTime {
+    fun getDailyLoginBonusInfo(email: String): DailyLoginBonusResponse {
+        val user = getUserByEmailForBonus(email)
+        val currentStreak = user.dailyLoginBonusStreak
+        val nextBonusCoins = calculateDailyBonus(currentStreak + 1)
+        return DailyLoginBonusResponse(0, currentStreak, nextBonusCoins)
+    }
+
+    fun getRemainingTimeToNextBonus(email: String): RemainingBonusTime {
         val user = getUserByEmailForBonus(email)
         val lastBonusTime = user.lastDailyLoginBonusTime
 
