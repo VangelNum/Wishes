@@ -1,11 +1,11 @@
 package com.vangelnum.app.wisher.wishkey.serviceimpl
 
-import com.vangelnum.app.wisher.wishkey.entity.WishKey
 import com.vangelnum.app.wisher.user.repository.UserRepository
+import com.vangelnum.app.wisher.wishkey.entity.WishKey
 import com.vangelnum.app.wisher.wishkey.repository.WishKeyRepository
 import com.vangelnum.app.wisher.wishkey.service.WishKeyService
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 @Service
 class WishKeyServiceImpl(
@@ -21,7 +21,7 @@ class WishKeyServiceImpl(
         wishKeyRepository.findByUser(user).ifPresent {
             throw Error("Wish key already exists for user: $email")
         }
-        val key = UUID.randomUUID().toString().take(15)
+        val key = ("Key" + UUID.randomUUID().toString().replace("-", "").take(15)).uppercase()
         val wishKey = WishKey(
             key = key,
             user = user
@@ -39,7 +39,7 @@ class WishKeyServiceImpl(
         val existingWishKey = wishKeyRepository.findByUser(user)
             .orElseThrow { NoSuchElementException("Wish key not found for the current user") }
 
-        val newKey = UUID.randomUUID().toString().take(15)
+        val newKey = ("Key" + UUID.randomUUID().toString().replace("-", "").take(15)).uppercase()
         val updatedWishKey = existingWishKey.copy(key = newKey)
         return wishKeyRepository.save(updatedWishKey)
     }

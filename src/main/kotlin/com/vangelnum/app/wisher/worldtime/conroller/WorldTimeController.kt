@@ -16,6 +16,6 @@ class WorldTimeController(private val worldTimeService: WorldTimeService) {
     @GetMapping("/now")
     @Operation(summary = "Получение текущего времени")
     suspend fun getCurrentDate(@RequestParam("tz") timezone: String?): DateInfo {
-        return worldTimeService.getCurrentDate(timezone ?: "Europe/Moscow")
+        return worldTimeService.getCurrentDate(timezone ?: "UTC")
     }
 }
