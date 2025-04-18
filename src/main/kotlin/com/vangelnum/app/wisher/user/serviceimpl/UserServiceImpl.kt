@@ -246,8 +246,7 @@ class UserServiceImpl(
             (user.dailyLoginBonusStreak + 1).coerceAtMost(10)
         } else if (lastBonusTime == null) {
             1
-        }
-        else {
+        } else {
             1
         }
 
@@ -314,27 +313,40 @@ class UserServiceImpl(
     @Transactional
     override fun claimAdReward(email: String): AdRewardResponse {
         val user = getUserByEmailForBonus(email)
-        val now = LocalDateTime.now()
-        val lastAdViewTime = user.lastAdViewTime
+        val cooldownTime = getAdCooldownTime(email)
 
-        if (lastAdViewTime != null && lastAdViewTime.plusMinutes(1).isAfter(now)) {
-            val nextAvailableTime = lastAdViewTime.plusMinutes(1)
-            val duration = Duration.between(now, nextAvailableTime)
-            val seconds = duration.seconds
+        if (cooldownTime > 0) {
             return AdRewardResponse(
                 coinsAwarded = 0,
-                message = "Повторный просмотр рекламы будет доступен через ${seconds} секунд.",
-                nextAdViewAvailableTime = nextAvailableTime
+
+                message = "Реклама пока недоступна. Пожалуйста, подождите ${cooldownTime} секунд.",
+                nextAdRewardAvailableTime = LocalDateTime.now().plusSeconds(cooldownTime)
             )
         }
 
         user.coins += 10
-        user.lastAdViewTime = now
+        user.lastAdRewardTime = LocalDateTime.now()
         userRepository.save(user)
 
         return AdRewardResponse(
             coinsAwarded = 10,
-            message = "Вы получили 10 монет за просмотр рекламы."
+
+            message = "Вы получили 10 монет за просмотр рекламы.",
+            nextAdRewardAvailableTime = null
         )
+    }
+
+    override fun getAdCooldownTime(email: String): Long {
+        val user = getUserByEmailForBonus(email)
+        val now = LocalDateTime.now()
+        val lastAdRewardTime = user.lastAdRewardTime
+
+        if (lastAdRewardTime != null) {
+            val nextAvailableTime = lastAdRewardTime.plusMinutes(1)
+            if (nextAvailableTime.isAfter(now)) {
+                return Duration.between(now, nextAvailableTime).seconds
+            }
+        }
+        return 0
     }
 }

@@ -20,4 +20,5 @@ interface UserService {
     fun claimDailyLoginBonus(email: String): DailyLoginBonusResponse
     fun getDailyBonusState(email: String): DailyBonusStateResponse
     fun claimAdReward(email: String): AdRewardResponse
+    fun getAdCooldownTime(email: String): Long
 }

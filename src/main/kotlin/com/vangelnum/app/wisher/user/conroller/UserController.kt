@@ -119,4 +119,12 @@ class UserController(
         val adRewardResponse = userService.claimAdReward(email)
         return ResponseEntity.ok(adRewardResponse)
     }
+
+    @Operation(summary = "Получение времени ожидания перед просмотром рекламы")
+    @GetMapping("/ad-cooldown")
+    fun getAdCooldownTime(): ResponseEntity<Long> {
+        val email = getCurrentUserEmail()
+        val cooldownTime = userService.getAdCooldownTime(email)
+        return ResponseEntity.ok(cooldownTime)
+    }
 }

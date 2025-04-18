@@ -57,5 +57,5 @@ data class User(
     var lastDailyLoginBonusTime: LocalDateTime? = null,
 
     @Column
-    var lastAdViewTime: LocalDateTime? = null
+    var lastAdRewardTime: LocalDateTime? = null
 )

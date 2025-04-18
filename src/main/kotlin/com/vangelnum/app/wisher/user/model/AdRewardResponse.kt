@@ -5,5 +5,5 @@ import java.time.LocalDateTime
 data class AdRewardResponse(
     val coinsAwarded: Int,
     val message: String,
-    val nextAdViewAvailableTime: LocalDateTime? = null
+    val nextAdRewardAvailableTime: LocalDateTime? = null
 )
